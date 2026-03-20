@@ -1,3 +1,79 @@
+/**
+ * PickyPalette — Interaction Model
+ * =================================
+ *
+ * Canvas interactions
+ * -------------------
+ * Click              → select the closest palette color under the cursor
+ * Drag               → move the selected color (relative to its position)
+ * Cmd/Ctrl + click   → add a new color
+ * Cmd/Ctrl + drag    → add a new color and adjust it live
+ * Double-click       → add a new color (hold to drag-adjust)
+ * Empty canvas       → click/drag always adds
+ * Scroll / 2-finger  → adjust the position slider (3rd axis)
+ *
+ * Modifiers (canvas & swatches)
+ * -----------------------------
+ * Alt/Option          → reveal raw color space under the hovered region
+ * Shift + Alt/Option  → isolate the hovered color (flat region stays,
+ *                       rest shows raw color space)
+ *
+ * Keyboard
+ * --------
+ * C                  → toggle pick mode (crosshair, next click adds)
+ * Cmd/Ctrl + Z       → undo
+ * Delete / Backspace → remove color under cursor (canvas) or selected color
+ * Escape             → cancel drag or exit pick mode
+ *
+ * Cursors
+ * -------
+ * grab               → default (you can drag to move the selected color)
+ * grabbing           → while dragging
+ * crosshair          → Cmd/Ctrl held, pick mode, or empty canvas
+ *
+ * Visual feedback
+ * ---------------
+ * Highlight outline  → shown on hover (canvas regions & swatches),
+ *                       uses drop-shadow with contrast-aware color
+ *                       (black or white via wcagContrast)
+ * Reveal mask        → Alt shows raw color space under a region
+ * Isolation mask     → Shift+Alt isolates one color's territory
+ * FLIP animation     → swatches animate to new positions on sort
+ * Staggered panels   → settings/IO sections slide in with delay
+ * Cursor probe       → tooltip follows cursor, shows palette color
+ *                       when hovering, raw color during drag/pick
+ *
+ * Edge cases & design decisions
+ * -----------------------------
+ * - Drag uses relative offset: on pointerdown we scan the raw canvas
+ *   to find where the selected color lives (findColorUV), then track
+ *   the offset so the color doesn't snap to the cursor.
+ * - Cursor can leave the canvas during move-drag: we allow out-of-bounds
+ *   pointer events and clamp the UV so colors can reach the edges.
+ * - Sort results are ignored while the pointer is down (pointerState
+ *   not null) to avoid reordering the palette mid-drag.
+ * - Removing colors delays re-sort by 1s (debounced) so rapid removals
+ *   don't cause constant reshuffling. Timer is cleared if palette
+ *   drops below 3 colors.
+ * - Adding a color preserves the current sort order with the new color
+ *   appended at the end, so it appears last then animates into place.
+ * - The paste field is debounced (600ms) and only syncs back to the
+ *   textarea when it's not focused, to avoid fighting the user's input.
+ * - Modifier keys are tracked in a shared `modifierKeys` object updated
+ *   on every keydown/keyup/pointermove. All state-dependent visuals
+ *   (cursor, probe, highlight, swatch hover) flow through a single
+ *   `stateDidChange()` so pressing/releasing a modifier while already
+ *   hovering works without needing a new mouse event.
+ * - `hoveredSwatch` tracks which swatch the cursor is over so that
+ *   pressing Alt/Shift while hovering instantly updates the mask.
+ * - probeEvent is nulled on pointerleave to prevent stale tooltip
+ *   rendering when hovering swatches outside the canvas.
+ * - vizClosest is created with 1+ colors (not 2+) so the flat-color
+ *   region view appears right after the first color is added.
+ * - The favicon updates from vizClosest when available, falling back
+ *   to vizRaw, rendered via OffscreenCanvas with a "P" overlay.
+ */
+
 import type { RGB, Axis } from "./types";
 import { AXES } from "./types";
 import {
