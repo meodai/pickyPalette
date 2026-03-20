@@ -1,6 +1,6 @@
-import type { Axis } from './types';
-import { AXES } from './types';
-import { AXIS_NAMES, computeSliderStops } from './color';
+import type { Axis } from "./types";
+import { AXES } from "./types";
+import { AXIS_NAMES, computeSliderStops } from "./color";
 
 export interface Controls {
   $colorModel: HTMLSelectElement;
@@ -20,19 +20,22 @@ export interface Controls {
 }
 
 function labeled(text: string, el: HTMLElement): HTMLLabelElement {
-  const $label = document.createElement('label');
-  const $span = document.createElement('span');
+  const $label = document.createElement("label");
+  const $span = document.createElement("span");
   $span.textContent = text;
   $label.appendChild($span);
   $label.appendChild(el);
   return $label;
 }
 
-export function createControls($tools: HTMLElement, $sliderWrap: HTMLElement): Controls {
-  let currentAxis: Axis = 'y';
+export function createControls(
+  $tools: HTMLElement,
+  $sliderWrap: HTMLElement,
+): Controls {
+  let currentAxis: Axis = "y";
 
   // ── Color model dropdown ───────────────────────────────────────────
-  const $colorModel = document.createElement('select');
+  const $colorModel = document.createElement("select");
   $colorModel.innerHTML = `
     <optgroup label="OK — Hue-based">
       <option value="okhsl" selected>OKHsl</option>
@@ -79,25 +82,25 @@ export function createControls($tools: HTMLElement, $sliderWrap: HTMLElement): C
   `;
 
   // ── Axis buttons (settings row) ────────────────────────────────────
-  const $axisGroup = document.createElement('span');
-  $axisGroup.className = 'axis-buttons';
+  const $axisGroup = document.createElement("span");
+  $axisGroup.className = "axis-buttons";
   const $axisBtns = AXES.map((a) => {
-    const btn = document.createElement('button');
-    btn.className = 'axis-btn';
+    const btn = document.createElement("button");
+    btn.className = "axis-btn";
     btn.dataset.axis = a;
-    if (a === currentAxis) btn.classList.add('is-active');
-    btn.addEventListener('click', () => controls.setAxis(a));
+    if (a === currentAxis) btn.classList.add("is-active");
+    btn.addEventListener("click", () => controls.setAxis(a));
     $axisGroup.appendChild(btn);
     return btn;
   });
 
   // Model row layout
-  const $modelRow = document.createElement('label');
-  $modelRow.className = 'picker__model-row';
-  const $modelSpan = document.createElement('span');
-  $modelSpan.textContent = 'Color model';
-  const $modelControls = document.createElement('span');
-  $modelControls.className = 'picker__model-controls';
+  const $modelRow = document.createElement("label");
+  $modelRow.className = "picker__model-row";
+  const $modelSpan = document.createElement("span");
+  $modelSpan.textContent = "Color model";
+  const $modelControls = document.createElement("span");
+  $modelControls.className = "picker__model-controls";
   $modelControls.appendChild($colorModel);
   $modelControls.appendChild($axisGroup);
   $modelRow.appendChild($modelSpan);
@@ -105,7 +108,7 @@ export function createControls($tools: HTMLElement, $sliderWrap: HTMLElement): C
   $tools.appendChild($modelRow);
 
   // ── Distance metric ────────────────────────────────────────────────
-  const $distanceMetric = document.createElement('select');
+  const $distanceMetric = document.createElement("select");
   $distanceMetric.innerHTML = `
     <optgroup label="OK">
       <option value="oklab" selected>OKLab</option>
@@ -124,65 +127,70 @@ export function createControls($tools: HTMLElement, $sliderWrap: HTMLElement): C
       <option value="rgb">RGB</option>
     </optgroup>
   `;
-  $tools.appendChild(labeled('Distance metric', $distanceMetric));
+  $tools.appendChild(labeled("Distance metric", $distanceMetric));
 
   // ── Toggle checkboxes ──────────────────────────────────────────────
   function checkbox(label: string, checked: boolean): HTMLInputElement {
-    const $cb = document.createElement('input');
-    $cb.type = 'checkbox';
+    const $cb = document.createElement("input");
+    $cb.type = "checkbox";
     $cb.checked = checked;
     $tools.appendChild(labeled(label, $cb));
     return $cb;
   }
 
-  const $outlineCheckbox = checkbox('Outline', false);
-  const $revealCheckbox = checkbox('Reveal Color Space While Picking', true);
-  const $gamutClipCheckbox = checkbox('Clip to sRGB', false);
-  const $autoSortCheckbox = checkbox('Auto-Sort Color Swatches', true);
+  const $outlineCheckbox = checkbox("Outline", false);
+  const $revealCheckbox = checkbox("Reveal Color Space While Picking", true);
+  const $gamutClipCheckbox = checkbox("Clip to sRGB", false);
+  const $autoSortCheckbox = checkbox("Auto-Sort Color Swatches", true);
 
   // ── Position slider ────────────────────────────────────────────────
-  const $posSlider = document.createElement('input');
-  $posSlider.type = 'range';
-  $posSlider.min = '0';
-  $posSlider.max = '1';
-  $posSlider.step = '0.001';
-  $posSlider.value = '0.5';
+  const $posSlider = document.createElement("input");
+  $posSlider.type = "range";
+  $posSlider.min = "0";
+  $posSlider.max = "1";
+  $posSlider.step = "0.001";
+  $posSlider.value = "0.5";
 
-  const $sliderAxisWrap = document.createElement('div');
-  $sliderAxisWrap.className = 'picker__axis-switcher';
+  const $sliderAxisWrap = document.createElement("div");
+  $sliderAxisWrap.className = "picker__axis-switcher";
   const $sliderAxisBtns = AXES.map((a) => {
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.className = 'picker__axis-btn';
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "picker__axis-btn";
     btn.dataset.axis = a;
-    if (a === currentAxis) btn.classList.add('is-active');
-    btn.addEventListener('click', () => controls.setAxis(a));
+    if (a === currentAxis) btn.classList.add("is-active");
+    btn.addEventListener("click", () => controls.setAxis(a));
     $sliderAxisWrap.appendChild(btn);
     return btn;
   });
 
-  const $sliderCell = document.createElement('div');
-  $sliderCell.className = 'picker__slider-cell';
+  const $sliderCell = document.createElement("div");
+  $sliderCell.className = "picker__slider-cell";
   $sliderCell.appendChild($posSlider);
   $sliderWrap.appendChild($sliderAxisWrap);
   $sliderWrap.appendChild($sliderCell);
 
   // ── Internal update helpers ────────────────────────────────────────
   function updateAxisButtonLabels(): void {
-    const names = AXIS_NAMES[$colorModel.value] || ['X', 'Y', 'Z'];
-    $axisBtns.forEach((btn, i) => { btn.textContent = names[i]; });
+    const names = AXIS_NAMES[$colorModel.value] || ["X", "Y", "Z"];
+    $axisBtns.forEach((btn, i) => {
+      btn.textContent = names[i];
+    });
     $sliderAxisBtns.forEach((btn, i) => {
       btn.textContent = names[i];
-      btn.classList.toggle('is-active', AXES[i] === currentAxis);
+      btn.classList.toggle("is-active", AXES[i] === currentAxis);
     });
   }
 
   function updateSliderGradient(): void {
     const stops = computeSliderStops($colorModel.value, currentAxis);
     if (stops.length === 0) {
-      $sliderCell.style.removeProperty('--slider-gradient');
+      $sliderCell.style.removeProperty("--slider-gradient");
     } else {
-      $sliderCell.style.setProperty('--slider-gradient', `linear-gradient(to right, ${stops.join(', ')})`);
+      $sliderCell.style.setProperty(
+        "--slider-gradient",
+        `linear-gradient(to right, ${stops.join(", ")})`,
+      );
     }
   }
 
@@ -202,10 +210,14 @@ export function createControls($tools: HTMLElement, $sliderWrap: HTMLElement): C
     $posSlider,
     $sliderCell: $sliderCell as HTMLDivElement,
 
-    get axis() { return currentAxis; },
+    get axis() {
+      return currentAxis;
+    },
     setAxis(axis: Axis) {
       currentAxis = axis;
-      $axisBtns.forEach((btn) => btn.classList.toggle('is-active', btn.dataset.axis === axis));
+      $axisBtns.forEach((btn) =>
+        btn.classList.toggle("is-active", btn.dataset.axis === axis),
+      );
       updateLabels();
       controls.onAxisChange?.(axis);
     },
@@ -215,7 +227,7 @@ export function createControls($tools: HTMLElement, $sliderWrap: HTMLElement): C
   };
 
   // Color model change updates labels internally
-  $colorModel.addEventListener('change', () => updateLabels());
+  $colorModel.addEventListener("change", () => updateLabels());
 
   // Initial label render
   updateLabels();

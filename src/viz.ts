@@ -1,6 +1,6 @@
-import { PaletteViz } from 'palette-shader';
-import type { RGB, Axis } from './types';
-import { hexToRGB } from './color';
+import { PaletteViz } from "palette-shader";
+import type { RGB, Axis } from "./types";
+import { hexToRGB } from "./color";
 
 const DUMMY_PALETTE: RGB[] = [[0.5, 0.5, 0.5]];
 
@@ -13,7 +13,11 @@ export interface VizManager {
   ensureVizClosest(vizPalette: RGB[]): PaletteViz | null;
   updateView(pickMode: boolean, hasColors: boolean): void;
 
-  compositeMask(hex: string, matchSource: 'raw' | 'closest', otherSource: 'raw' | 'closest'): void;
+  compositeMask(
+    hex: string,
+    matchSource: "raw" | "closest",
+    otherSource: "raw" | "closest",
+  ): void;
   showMask(): void;
   hideMask(): void;
 
@@ -34,27 +38,33 @@ export interface VizManager {
 
 export function createVizManager($canvasWrap: HTMLElement): VizManager {
   const pixelRatio = Math.min(devicePixelRatio, 2);
-  let currentAxis: Axis = 'y';
+  let currentAxis: Axis = "y";
   let currentPosition = 0.5;
-  let currentColorModel = 'okhsl';
-  let currentDistanceMetric = 'oklab';
+  let currentColorModel = "okhsl";
+  let currentDistanceMetric = "oklab";
   let currentOutlineWidth = 0;
   let currentGamutClip = false;
 
   const vizRaw = new PaletteViz({
-    width: 500, height: 500, pixelRatio,
-    axis: currentAxis, position: currentPosition,
-    colorModel: currentColorModel, distanceMetric: currentDistanceMetric,
-    palette: DUMMY_PALETTE, showRaw: true, container: $canvasWrap,
+    width: 500,
+    height: 500,
+    pixelRatio,
+    axis: currentAxis,
+    position: currentPosition,
+    colorModel: currentColorModel,
+    distanceMetric: currentDistanceMetric,
+    palette: DUMMY_PALETTE,
+    showRaw: true,
+    container: $canvasWrap,
   });
 
   let vizClosest: PaletteViz | null = null;
 
   // Mask overlay
-  const maskCanvas = document.createElement('canvas');
-  maskCanvas.className = 'mask-canvas';
-  maskCanvas.style.display = 'none';
-  const maskCtx = maskCanvas.getContext('2d')!;
+  const maskCanvas = document.createElement("canvas");
+  maskCanvas.className = "mask-canvas";
+  maskCanvas.style.display = "none";
+  const maskCtx = maskCanvas.getContext("2d")!;
   $canvasWrap.appendChild(maskCanvas);
 
   function ensureVizClosest(vizPalette: RGB[]): PaletteViz | null {
@@ -62,11 +72,18 @@ export function createVizManager($canvasWrap: HTMLElement): VizManager {
     if (vizPalette.length < 2) return null;
     const w = Math.round($canvasWrap.clientWidth) || 500;
     vizClosest = new PaletteViz({
-      width: w, height: w, pixelRatio,
-      palette: vizPalette, showRaw: false, container: $canvasWrap,
-      colorModel: currentColorModel, distanceMetric: currentDistanceMetric,
-      axis: currentAxis, position: currentPosition,
-      outlineWidth: currentOutlineWidth, gamutClip: currentGamutClip,
+      width: w,
+      height: w,
+      pixelRatio,
+      palette: vizPalette,
+      showRaw: false,
+      container: $canvasWrap,
+      colorModel: currentColorModel,
+      distanceMetric: currentDistanceMetric,
+      axis: currentAxis,
+      position: currentPosition,
+      outlineWidth: currentOutlineWidth,
+      gamutClip: currentGamutClip,
     });
     $canvasWrap.appendChild(maskCanvas);
     return vizClosest;
@@ -83,7 +100,11 @@ export function createVizManager($canvasWrap: HTMLElement): VizManager {
     }
   }
 
-  function compositeMask(hex: string, matchSource: 'raw' | 'closest', otherSource: 'raw' | 'closest'): void {
+  function compositeMask(
+    hex: string,
+    matchSource: "raw" | "closest",
+    otherSource: "raw" | "closest",
+  ): void {
     if (!vizClosest) return;
 
     // Force synchronous render so we can read fresh pixels
@@ -93,12 +114,20 @@ export function createVizManager($canvasWrap: HTMLElement): VizManager {
     const w = vizClosest.canvas.width;
     const h = vizClosest.canvas.height;
 
-    const glClosest = vizClosest.canvas.getContext('webgl2')!;
+    const glClosest = vizClosest.canvas.getContext("webgl2")!;
     const closestPx = new Uint8Array(w * h * 4);
     glClosest.bindFramebuffer(glClosest.FRAMEBUFFER, null);
-    glClosest.readPixels(0, 0, w, h, glClosest.RGBA, glClosest.UNSIGNED_BYTE, closestPx);
+    glClosest.readPixels(
+      0,
+      0,
+      w,
+      h,
+      glClosest.RGBA,
+      glClosest.UNSIGNED_BYTE,
+      closestPx,
+    );
 
-    const glRaw = vizRaw.canvas.getContext('webgl2')!;
+    const glRaw = vizRaw.canvas.getContext("webgl2")!;
     const rawPx = new Uint8Array(w * h * 4);
     glRaw.bindFramebuffer(glRaw.FRAMEBUFFER, null);
     glRaw.readPixels(0, 0, w, h, glRaw.RGBA, glRaw.UNSIGNED_BYTE, rawPx);
@@ -140,39 +169,45 @@ export function createVizManager($canvasWrap: HTMLElement): VizManager {
     }
 
     maskCtx.putImageData(imageData, 0, 0);
-    maskCanvas.style.display = '';
-    vizClosest.canvas.style.display = 'none';
-    vizRaw.canvas.style.display = 'none';
+    maskCanvas.style.display = "";
+    vizClosest.canvas.style.display = "none";
+    vizRaw.canvas.style.display = "none";
   }
 
   function showMask(): void {
-    maskCanvas.style.display = '';
+    maskCanvas.style.display = "";
   }
 
   function hideMask(): void {
-    maskCanvas.style.display = 'none';
-    vizRaw.canvas.style.display = '';
+    maskCanvas.style.display = "none";
+    vizRaw.canvas.style.display = "";
     manager.updateView(false, true);
   }
 
   function updateView(pickMode: boolean, hasColors: boolean): void {
     if (pickMode) {
-      vizRaw.canvas.style.zIndex = '2';
-      if (vizClosest) vizClosest.canvas.style.display = 'none';
+      vizRaw.canvas.style.zIndex = "2";
+      if (vizClosest) vizClosest.canvas.style.display = "none";
       return;
     }
-    vizRaw.canvas.style.zIndex = '';
+    vizRaw.canvas.style.zIndex = "";
     if (!hasColors || !vizClosest) {
-      if (vizClosest) vizClosest.canvas.style.display = 'none';
+      if (vizClosest) vizClosest.canvas.style.display = "none";
       return;
     }
-    vizClosest.canvas.style.display = '';
+    vizClosest.canvas.style.display = "";
   }
 
   const manager: VizManager = {
-    get vizRaw() { return vizRaw; },
-    get vizClosest() { return vizClosest; },
-    set vizClosest(v) { vizClosest = v; },
+    get vizRaw() {
+      return vizRaw;
+    },
+    get vizClosest() {
+      return vizClosest;
+    },
+    set vizClosest(v) {
+      vizClosest = v;
+    },
     maskCanvas,
 
     syncPalette,

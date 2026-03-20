@@ -1,6 +1,6 @@
 /// <reference types="vite/client" />
 
-declare module 'colorsort-js' {
+declare module "colorsort-js" {
   interface SortResult {
     sorted: string[];
     metrics?: unknown;
@@ -9,12 +9,12 @@ declare module 'colorsort-js' {
   export function multiAuto(hexes: string[], data: unknown): SortResult[];
 }
 
-declare module 'colorsort-js/trained.json' {
+declare module "colorsort-js/trained.json" {
   const data: unknown;
   export default data;
 }
 
-declare module 'palette-shader' {
+declare module "palette-shader" {
   export interface PaletteVizOptions {
     width: number;
     height: number;
@@ -48,11 +48,11 @@ declare module 'palette-shader' {
   }
 }
 
-declare module 'token-beam' {
+declare module "token-beam" {
   interface SessionEvents {
     paired: (data: { sessionToken?: string }) => void;
-    'peer-connected': () => void;
-    'peer-disconnected': () => void;
+    "peer-connected": () => void;
+    "peer-disconnected": () => void;
     sync: (data: { payload: unknown }) => void;
     error: (data: { message: string }) => void;
     disconnected: () => void;
@@ -65,7 +65,10 @@ declare module 'token-beam' {
       origin: string;
       icon: { type: string; value: string };
     });
-    on<K extends keyof SessionEvents>(event: K, handler: SessionEvents[K]): void;
+    on<K extends keyof SessionEvents>(
+      event: K,
+      handler: SessionEvents[K],
+    ): void;
     connect(): Promise<void>;
     disconnect(): void;
     hasPeers(): boolean;
@@ -79,12 +82,18 @@ declare module 'token-beam' {
       clientType: string;
       sessionToken: string;
     });
-    on<K extends keyof SessionEvents>(event: K, handler: SessionEvents[K]): void;
+    on<K extends keyof SessionEvents>(
+      event: K,
+      handler: SessionEvents[K],
+    ): void;
     connect(): Promise<void>;
     disconnect(): void;
     getState(): string;
   }
 
   export function extractColorTokens(payload: unknown): { hex: string }[];
-  export function createCollection(name: string, tokens: Record<string, string>): unknown;
+  export function createCollection(
+    name: string,
+    tokens: Record<string, string>,
+  ): unknown;
 }

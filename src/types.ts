@@ -1,6 +1,6 @@
 export type RGB = [number, number, number];
-export type Axis = 'x' | 'y' | 'z';
-export const AXES: readonly Axis[] = ['x', 'y', 'z'] as const;
+export type Axis = "x" | "y" | "z";
+export const AXES: readonly Axis[] = ["x", "y", "z"] as const;
 
 export interface HashState {
   colors: string[];

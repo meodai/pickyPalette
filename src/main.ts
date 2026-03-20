@@ -1,13 +1,19 @@
-import type { RGB, Axis } from './types';
-import { AXES } from './types';
-import { hexToRGB, rgbToHex, toVizPalette, AXIS_NAMES, isHueAxis } from './color';
-import { createControls } from './controls';
-import { createVizManager } from './viz';
-import { createSortManager } from './sort';
-import { createBeamManager } from './beam';
-import { encodeHash, decodeHash } from './hash';
-import { scheduleFaviconUpdate as _schedFavicon } from './favicon';
-import type { HashState } from './types';
+import type { RGB, Axis } from "./types";
+import { AXES } from "./types";
+import {
+  hexToRGB,
+  rgbToHex,
+  toVizPalette,
+  AXIS_NAMES,
+  isHueAxis,
+} from "./color";
+import { createControls } from "./controls";
+import { createVizManager } from "./viz";
+import { createSortManager } from "./sort";
+import { createBeamManager } from "./beam";
+import { encodeHash, decodeHash } from "./hash";
+import { scheduleFaviconUpdate as _schedFavicon } from "./favicon";
+import type { HashState } from "./types";
 
 // ── DOM refs ─────────────────────────────────────────────────────────────────
 
@@ -17,27 +23,34 @@ function $<T extends HTMLElement>(sel: string): T {
   return el;
 }
 
-const $tools = $<HTMLDivElement>('[data-tools]');
-const $swatches = $<HTMLDivElement>('[data-swatches]');
-const $canvasWrap = $<HTMLDivElement>('[data-canvas-wrap]');
-const $sliderWrap = $<HTMLDivElement>('[data-slider-wrap]');
-const $addBtn = $<HTMLButtonElement>('[data-add]');
-const $addIcon = $addBtn.querySelector('.picker__add-icon')!;
-const $addLabel = $addBtn.querySelector('.picker__add-label')!;
-const $paste = $<HTMLTextAreaElement>('[data-paste]');
+const $tools = $<HTMLDivElement>("[data-tools]");
+const $swatches = $<HTMLDivElement>("[data-swatches]");
+const $canvasWrap = $<HTMLDivElement>("[data-canvas-wrap]");
+const $sliderWrap = $<HTMLDivElement>("[data-slider-wrap]");
+const $addBtn = $<HTMLButtonElement>("[data-add]");
+const $addIcon = $addBtn.querySelector(".picker__add-icon")!;
+const $addLabel = $addBtn.querySelector(".picker__add-label")!;
+const $paste = $<HTMLTextAreaElement>("[data-paste]");
 
 // ── Settings toggle ──────────────────────────────────────────────────────────
 
-const $settingsToggle = $<HTMLInputElement>('[data-settings-toggle]');
-$settingsToggle.addEventListener('change', () => { $tools.hidden = !$settingsToggle.checked; });
+const $settingsToggle = $<HTMLInputElement>("[data-settings-toggle]");
+$settingsToggle.addEventListener("change", () => {
+  $tools.hidden = !$settingsToggle.checked;
+});
 
 // ── Import / Export toggle ───────────────────────────────────────────────────
 
-const $ioToggle = $<HTMLInputElement>('[data-io-toggle]');
-const $ioBody = $<HTMLDivElement>('[data-io-body]');
+const $ioToggle = $<HTMLInputElement>("[data-io-toggle]");
+const $ioBody = $<HTMLDivElement>("[data-io-body]");
 
-$ioToggle.addEventListener('change', () => { $ioBody.hidden = !$ioToggle.checked; });
-function closeIO(): void { $ioToggle.checked = false; $ioBody.hidden = true; }
+$ioToggle.addEventListener("change", () => {
+  $ioBody.hidden = !$ioToggle.checked;
+});
+function closeIO(): void {
+  $ioToggle.checked = false;
+  $ioBody.hidden = true;
+}
 
 // ── State ────────────────────────────────────────────────────────────────────
 
@@ -48,7 +61,9 @@ let sortedPalette: string[] | null = null;
 let pickMode = false;
 
 function displayPalette(): string[] {
-  return sortedPalette && sortedPalette.length === palette.length ? sortedPalette : palette;
+  return sortedPalette && sortedPalette.length === palette.length
+    ? sortedPalette
+    : palette;
 }
 
 function vizPalette(): RGB[] {
@@ -75,18 +90,24 @@ const sort = createSortManager((sorted) => {
 
 const beam = createBeamManager(
   {
-    $beamMode: $<HTMLSelectElement>('[data-beam-mode]'),
-    $beamToken: $<HTMLInputElement>('[data-beam-token]'),
-    $beamConnect: $<HTMLButtonElement>('[data-beam-connect]'),
-    $beamCopy: $<HTMLButtonElement>('[data-beam-copy]'),
-    $beamStatus: $<HTMLElement>('[data-beam-status]'),
-    $ioLed: $<HTMLElement>('[data-io-led]'),
+    $beamMode: $<HTMLSelectElement>("[data-beam-mode]"),
+    $beamToken: $<HTMLInputElement>("[data-beam-token]"),
+    $beamConnect: $<HTMLButtonElement>("[data-beam-connect]"),
+    $beamCopy: $<HTMLButtonElement>("[data-beam-copy]"),
+    $beamStatus: $<HTMLElement>("[data-beam-status]"),
+    $ioLed: $<HTMLElement>("[data-io-led]"),
   },
-  { getDisplayPalette: displayPalette, setPalette: (colors) => setPalette(colors), closeIO },
+  {
+    getDisplayPalette: displayPalette,
+    setPalette: (colors) => setPalette(colors),
+    closeIO,
+  },
 );
 
 function scheduleFaviconUpdate(): void {
-  _schedFavicon(() => (palette.length >= 2 && viz.vizClosest) ? viz.vizClosest! : viz.vizRaw);
+  _schedFavicon(() =>
+    palette.length >= 2 && viz.vizClosest ? viz.vizClosest! : viz.vizRaw,
+  );
 }
 
 // ── Refresh helpers ──────────────────────────────────────────────────────────
@@ -115,17 +136,21 @@ let _hashTimer: ReturnType<typeof setTimeout> | null = null;
 function scheduleHashUpdate(): void {
   if (_hashTimer !== null) clearTimeout(_hashTimer);
   _hashTimer = setTimeout(() => {
-    history.replaceState(null, '', encodeHash({
-      palette: displayPalette(),
-      colorModel: controls.$colorModel.value,
-      distanceMetric: controls.$distanceMetric.value,
-      axis: controls.axis,
-      pos: parseFloat(controls.$posSlider.value),
-      outline: controls.$outlineCheckbox.checked,
-      reveal: controls.$revealCheckbox.checked,
-      gamut: controls.$gamutClipCheckbox.checked,
-      autoSort: controls.$autoSortCheckbox.checked,
-    }));
+    history.replaceState(
+      null,
+      "",
+      encodeHash({
+        palette: displayPalette(),
+        colorModel: controls.$colorModel.value,
+        distanceMetric: controls.$distanceMetric.value,
+        axis: controls.axis,
+        pos: parseFloat(controls.$posSlider.value),
+        outline: controls.$outlineCheckbox.checked,
+        reveal: controls.$revealCheckbox.checked,
+        gamut: controls.$gamutClipCheckbox.checked,
+        autoSort: controls.$autoSortCheckbox.checked,
+      }),
+    );
   }, 400);
 }
 
@@ -204,43 +229,49 @@ function renderSwatches(): void {
   dp.forEach((hex, displayIdx) => {
     let srcIndex = -1;
     for (let j = 0; j < palette.length; j++) {
-      if (palette[j] === hex && !usedSrcIndices.has(j)) { srcIndex = j; break; }
+      if (palette[j] === hex && !usedSrcIndices.has(j)) {
+        srcIndex = j;
+        break;
+      }
     }
     if (srcIndex >= 0) usedSrcIndices.add(srcIndex);
 
-    const $s = document.createElement('span');
-    $s.className = 'picker__swatch';
+    const $s = document.createElement("span");
+    $s.className = "picker__swatch";
     $s.style.background = hex;
     $s.dataset.index = String(srcIndex);
-    if (srcIndex === selectedIndex) $s.classList.add('is-selected');
+    if (srcIndex === selectedIndex) $s.classList.add("is-selected");
 
-    const $rm = document.createElement('button');
-    $rm.className = 'picker__swatch__remove';
-    $rm.textContent = '\u00d7';
-    $rm.addEventListener('click', (e) => { e.stopPropagation(); removeColor(srcIndex); });
+    const $rm = document.createElement("button");
+    $rm.className = "picker__swatch__remove";
+    $rm.textContent = "\u00d7";
+    $rm.addEventListener("click", (e) => {
+      e.stopPropagation();
+      removeColor(srcIndex);
+    });
     $s.appendChild($rm);
 
-    $s.addEventListener('click', () => selectColor(srcIndex));
-    $s.addEventListener('mouseenter', (e) => {
+    $s.addEventListener("click", () => selectColor(srcIndex));
+    $s.addEventListener("mouseenter", (e) => {
       if (!e.shiftKey || pointerState?.dragging || !viz.vizClosest) return;
-      viz.compositeMask(hex, 'closest', 'raw');
+      viz.compositeMask(hex, "closest", "raw");
     });
-    $s.addEventListener('mouseleave', () => viz.hideMask());
+    $s.addEventListener("mouseleave", () => viz.hideMask());
     $swatches.insertBefore($s, $addBtn);
   });
 
-  $addBtn.classList.toggle('is-compact', palette.length > 0);
+  $addBtn.classList.toggle("is-compact", palette.length > 0);
 }
 
 // ── Paste field ──────────────────────────────────────────────────────────────
 
 let pasteIsSync = false;
 
-$paste.addEventListener('input', () => {
+$paste.addEventListener("input", () => {
   if (pasteIsSync) return;
   const colors = $paste.value
     .split(/[\s,]+/)
-    .map((s) => s.trim().replace(/^#?/, '#'))
+    .map((s) => s.trim().replace(/^#?/, "#"))
     .filter((s) => /^#([0-9a-f]{3}){1,2}$/i.test(s));
   if (colors.length < 1) return;
   setPalette(colors);
@@ -249,7 +280,7 @@ $paste.addEventListener('input', () => {
 
 function syncPasteField(): void {
   pasteIsSync = true;
-  $paste.value = displayPalette().join(', ');
+  $paste.value = displayPalette().join(", ");
   pasteIsSync = false;
 }
 
@@ -257,33 +288,45 @@ function syncPasteField(): void {
 
 function enterPickMode(): void {
   pickMode = true;
-  $addBtn.classList.add('is-picking');
-  $addIcon.textContent = '\u00d7';
-  $addLabel.innerHTML = '<kbd>C</kbd> Cancel pick';
+  $addBtn.classList.add("is-picking");
+  $addIcon.textContent = "\u00d7";
+  $addLabel.innerHTML = "<kbd>C</kbd> Cancel pick";
   viz.updateView(pickMode, palette.length > 0);
 }
 
 function exitPickMode(): void {
   pickMode = false;
-  $addBtn.classList.remove('is-picking');
-  $addIcon.textContent = '+';
-  $addLabel.innerHTML = '<kbd>C</kbd> Add color';
+  $addBtn.classList.remove("is-picking");
+  $addIcon.textContent = "+";
+  $addLabel.innerHTML = "<kbd>C</kbd> Add color";
   viz.updateView(pickMode, palette.length > 0);
 }
 
 function togglePickMode(): void {
-  if (pickMode) exitPickMode(); else enterPickMode();
+  if (pickMode) exitPickMode();
+  else enterPickMode();
 }
 
-$addBtn.addEventListener('click', togglePickMode);
+$addBtn.addEventListener("click", togglePickMode);
 
 // ── Canvas pointer interaction ───────────────────────────────────────────────
 
 const DRAG_THRESHOLD = 5;
-let pointerState: { x: number; y: number; id: number; dragging: boolean; dragIndex: number; moving: boolean } | null = null;
+let pointerState: {
+  x: number;
+  y: number;
+  id: number;
+  dragging: boolean;
+  dragIndex: number;
+  moving: boolean;
+} | null = null;
 let dragMaskRAF: number | null = null;
 
-function getUV(e: PointerEvent | MouseEvent): { u: number; v: number; inBounds: boolean } {
+function getUV(e: PointerEvent | MouseEvent): {
+  u: number;
+  v: number;
+  inBounds: boolean;
+} {
   const rect = $canvasWrap.getBoundingClientRect();
   const u = (e.clientX - rect.left) / rect.width;
   const v = 1 - (e.clientY - rect.top) / rect.height;
@@ -306,7 +349,10 @@ function cancelDrag(): void {
   const idx = pointerState.dragIndex;
   const wasMoving = pointerState.moving;
   pointerState = null;
-  if (dragMaskRAF !== null) { cancelAnimationFrame(dragMaskRAF); dragMaskRAF = null; }
+  if (dragMaskRAF !== null) {
+    cancelAnimationFrame(dragMaskRAF);
+    dragMaskRAF = null;
+  }
   viz.hideMask();
   if (wasMoving) {
     // Restore original color from undo stack
@@ -320,19 +366,24 @@ function cancelDrag(): void {
 function buildMask(colorIndex: number): void {
   if (!controls.$revealCheckbox.checked) return;
   if (colorIndex < 0 || colorIndex >= palette.length) return;
-  viz.compositeMask(palette[colorIndex], 'raw', 'closest');
+  viz.compositeMask(palette[colorIndex], "raw", "closest");
 }
 
 function findPaletteIndex(rgb: RGB): number {
   const tol = 4 / 255;
   for (let i = 0; i < palette.length; i++) {
     const c = hexToRGB(palette[i]);
-    if (Math.abs(rgb[0] - c[0]) < tol && Math.abs(rgb[1] - c[1]) < tol && Math.abs(rgb[2] - c[2]) < tol) return i;
+    if (
+      Math.abs(rgb[0] - c[0]) < tol &&
+      Math.abs(rgb[1] - c[1]) < tol &&
+      Math.abs(rgb[2] - c[2]) < tol
+    )
+      return i;
   }
   return -1;
 }
 
-$canvasWrap.addEventListener('pointerdown', (e) => {
+$canvasWrap.addEventListener("pointerdown", (e) => {
   if (e.button !== 0) return;
   const moving = e.shiftKey && palette.length > 0 && !pickMode;
   let moveIndex = -1;
@@ -343,11 +394,18 @@ $canvasWrap.addEventListener('pointerdown', (e) => {
       if (closestColor) moveIndex = findPaletteIndex(closestColor);
     }
   }
-  pointerState = { x: e.clientX, y: e.clientY, id: e.pointerId, dragging: false, dragIndex: moveIndex, moving };
+  pointerState = {
+    x: e.clientX,
+    y: e.clientY,
+    id: e.pointerId,
+    dragging: false,
+    dragIndex: moveIndex,
+    moving,
+  };
   $canvasWrap.setPointerCapture(e.pointerId);
 });
 
-$canvasWrap.addEventListener('pointermove', (e) => {
+$canvasWrap.addEventListener("pointermove", (e) => {
   probeEvent = e;
   if (probeRAF === null) probeRAF = requestAnimationFrame(updateProbe);
 
@@ -391,13 +449,16 @@ $canvasWrap.addEventListener('pointermove', (e) => {
   }
 });
 
-$canvasWrap.addEventListener('pointerup', (e) => {
+$canvasWrap.addEventListener("pointerup", (e) => {
   if (!pointerState || pointerState.id !== e.pointerId) return;
   const wasDragging = pointerState.dragging;
   const wasMoving = pointerState.moving;
   const dragIndex = pointerState.dragIndex;
   pointerState = null;
-  if (dragMaskRAF !== null) { cancelAnimationFrame(dragMaskRAF); dragMaskRAF = null; }
+  if (dragMaskRAF !== null) {
+    cancelAnimationFrame(dragMaskRAF);
+    dragMaskRAF = null;
+  }
 
   if (wasDragging) {
     viz.hideMask();
@@ -416,8 +477,15 @@ $canvasWrap.addEventListener('pointerup', (e) => {
   const { u, v, inBounds } = getUV(e);
   if (!inBounds) return;
 
-  if (pickMode) { addColor(getRawHexAtUV(u, v)); exitPickMode(); return; }
-  if (palette.length === 0 || !viz.vizClosest) { addColor(getRawHexAtUV(u, v)); return; }
+  if (pickMode) {
+    addColor(getRawHexAtUV(u, v));
+    exitPickMode();
+    return;
+  }
+  if (palette.length === 0 || !viz.vizClosest) {
+    addColor(getRawHexAtUV(u, v));
+    return;
+  }
 
   const closestColor = viz.getClosestColorAtUV(u, v);
   if (closestColor) {
@@ -426,13 +494,16 @@ $canvasWrap.addEventListener('pointerup', (e) => {
   }
 });
 
-$canvasWrap.addEventListener('pointercancel', () => {
+$canvasWrap.addEventListener("pointercancel", () => {
   pointerState = null;
-  if (dragMaskRAF !== null) { cancelAnimationFrame(dragMaskRAF); dragMaskRAF = null; }
+  if (dragMaskRAF !== null) {
+    cancelAnimationFrame(dragMaskRAF);
+    dragMaskRAF = null;
+  }
   viz.hideMask();
 });
 
-$canvasWrap.addEventListener('pointerleave', () => hideProbe());
+$canvasWrap.addEventListener("pointerleave", () => hideProbe());
 
 // ── Scroll / touch → adjust position ─────────────────────────────────────────
 
@@ -450,47 +521,66 @@ function adjustPosition(delta: number): void {
   scheduleFaviconUpdate();
 }
 
-$canvasWrap.addEventListener('wheel', (e) => {
-  e.preventDefault();
-  const delta = (e.deltaMode === 1 ? e.deltaY * 20 : e.deltaY) * 0.001;
-  adjustPosition(delta);
-}, { passive: false });
+$canvasWrap.addEventListener(
+  "wheel",
+  (e) => {
+    e.preventDefault();
+    const delta = (e.deltaMode === 1 ? e.deltaY * 20 : e.deltaY) * 0.001;
+    adjustPosition(delta);
+  },
+  { passive: false },
+);
 
 let touchState: { y: number } | null = null;
 
-$canvasWrap.addEventListener('touchstart', (e) => {
-  if (e.touches.length === 2) {
-    e.preventDefault();
-    touchState = { y: (e.touches[0].clientY + e.touches[1].clientY) / 2 };
-  }
-}, { passive: false });
+$canvasWrap.addEventListener(
+  "touchstart",
+  (e) => {
+    if (e.touches.length === 2) {
+      e.preventDefault();
+      touchState = { y: (e.touches[0].clientY + e.touches[1].clientY) / 2 };
+    }
+  },
+  { passive: false },
+);
 
-$canvasWrap.addEventListener('touchmove', (e) => {
-  if (e.touches.length === 2 && touchState) {
-    e.preventDefault();
-    const y = (e.touches[0].clientY + e.touches[1].clientY) / 2;
-    const delta = (touchState.y - y) * -0.003;
-    touchState.y = y;
-    adjustPosition(delta);
-  }
-}, { passive: false });
+$canvasWrap.addEventListener(
+  "touchmove",
+  (e) => {
+    if (e.touches.length === 2 && touchState) {
+      e.preventDefault();
+      const y = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+      const delta = (touchState.y - y) * -0.003;
+      touchState.y = y;
+      adjustPosition(delta);
+    }
+  },
+  { passive: false },
+);
 
-$canvasWrap.addEventListener('touchend', () => { touchState = null; });
-$canvasWrap.addEventListener('touchcancel', () => { touchState = null; });
+$canvasWrap.addEventListener("touchend", () => {
+  touchState = null;
+});
+$canvasWrap.addEventListener("touchcancel", () => {
+  touchState = null;
+});
 
 // ── Cursor probe ─────────────────────────────────────────────────────────────
 
-const $probe = document.createElement('div');
-$probe.className = 'cursor-probe';
-$probe.innerHTML = '<span class="cursor-probe__dot"></span><span class="cursor-probe__label"></span>';
-const $probeDot = $probe.querySelector<HTMLElement>('.cursor-probe__dot')!;
-const $probeLabel = $probe.querySelector<HTMLElement>('.cursor-probe__label')!;
+const $probe = document.createElement("div");
+$probe.className = "cursor-probe";
+$probe.innerHTML =
+  '<span class="cursor-probe__dot"></span><span class="cursor-probe__label"></span>';
+const $probeDot = $probe.querySelector<HTMLElement>(".cursor-probe__dot")!;
+const $probeLabel = $probe.querySelector<HTMLElement>(".cursor-probe__label")!;
 document.body.appendChild($probe);
 
 let probeRAF: number | null = null;
 let probeEvent: PointerEvent | null = null;
 
-function hideProbe(): void { $probe.classList.remove('is-visible'); }
+function hideProbe(): void {
+  $probe.classList.remove("is-visible");
+}
 
 function updateProbe(): void {
   probeRAF = null;
@@ -498,7 +588,10 @@ function updateProbe(): void {
   const rect = $canvasWrap.getBoundingClientRect();
   const u = (probeEvent.clientX - rect.left) / rect.width;
   const v = 1 - (probeEvent.clientY - rect.top) / rect.height;
-  if (u < 0 || u > 1 || v < 0 || v > 1) { hideProbe(); return; }
+  if (u < 0 || u > 1 || v < 0 || v > 1) {
+    hideProbe();
+    return;
+  }
 
   const color = viz.getRawColorAtUV(u, v);
   const hex = rgbToHex(color);
@@ -506,21 +599,38 @@ function updateProbe(): void {
   $probeLabel.textContent = hex;
   $probe.style.left = `${probeEvent.clientX + 14}px`;
   $probe.style.top = `${probeEvent.clientY + 14}px`;
-  $probe.classList.add('is-visible');
+  $probe.classList.add("is-visible");
 }
 
 // ── Keyboard shortcuts ───────────────────────────────────────────────────────
 
-document.addEventListener('keydown', (e) => {
-  if (e.target instanceof HTMLInputElement || e.target instanceof HTMLSelectElement || e.target instanceof HTMLTextAreaElement) return;
-  if ((e.metaKey || e.ctrlKey) && e.key === 'z') { e.preventDefault(); undo(); return; }
-  if (e.key === 'c' || e.key === 'C') { e.preventDefault(); togglePickMode(); }
-  if (e.key === 'Delete' || e.key === 'Backspace') {
-    if (selectedIndex >= 0 && selectedIndex < palette.length) { e.preventDefault(); removeColor(selectedIndex); }
+document.addEventListener("keydown", (e) => {
+  if (
+    e.target instanceof HTMLInputElement ||
+    e.target instanceof HTMLSelectElement ||
+    e.target instanceof HTMLTextAreaElement
+  )
+    return;
+  if ((e.metaKey || e.ctrlKey) && e.key === "z") {
+    e.preventDefault();
+    undo();
+    return;
   }
-  if (e.key === 'Escape') {
-    if (pointerState?.dragging) { e.preventDefault(); cancelDrag(); }
-    else if (pickMode) exitPickMode();
+  if (e.key === "c" || e.key === "C") {
+    e.preventDefault();
+    togglePickMode();
+  }
+  if (e.key === "Delete" || e.key === "Backspace") {
+    if (selectedIndex >= 0 && selectedIndex < palette.length) {
+      e.preventDefault();
+      removeColor(selectedIndex);
+    }
+  }
+  if (e.key === "Escape") {
+    if (pointerState?.dragging) {
+      e.preventDefault();
+      cancelDrag();
+    } else if (pickMode) exitPickMode();
   }
 });
 
@@ -533,40 +643,40 @@ controls.onAxisChange = (axis: Axis) => {
   scheduleFaviconUpdate();
 };
 
-controls.$colorModel.addEventListener('change', () => {
+controls.$colorModel.addEventListener("change", () => {
   viz.setColorModel(controls.$colorModel.value);
   viz.updateView(pickMode, palette.length > 0);
   scheduleHashUpdate();
   scheduleFaviconUpdate();
 });
 
-controls.$distanceMetric.addEventListener('change', () => {
+controls.$distanceMetric.addEventListener("change", () => {
   viz.setDistanceMetric(controls.$distanceMetric.value);
   viz.updateView(pickMode, palette.length > 0);
   scheduleHashUpdate();
   scheduleFaviconUpdate();
 });
 
-controls.$posSlider.addEventListener('input', () => {
+controls.$posSlider.addEventListener("input", () => {
   viz.setPosition(parseFloat(controls.$posSlider.value));
   viz.updateView(pickMode, palette.length > 0);
   scheduleHashUpdate();
   scheduleFaviconUpdate();
 });
 
-controls.$outlineCheckbox.addEventListener('change', () => {
+controls.$outlineCheckbox.addEventListener("change", () => {
   viz.setOutlineWidth(controls.$outlineCheckbox.checked ? 2 : 0);
   scheduleHashUpdate();
 });
 
-controls.$revealCheckbox.addEventListener('change', () => scheduleHashUpdate());
+controls.$revealCheckbox.addEventListener("change", () => scheduleHashUpdate());
 
-controls.$gamutClipCheckbox.addEventListener('change', () => {
+controls.$gamutClipCheckbox.addEventListener("change", () => {
   viz.setGamutClip(controls.$gamutClipCheckbox.checked);
   scheduleHashUpdate();
 });
 
-controls.$autoSortCheckbox.addEventListener('change', () => {
+controls.$autoSortCheckbox.addEventListener("change", () => {
   if (controls.$autoSortCheckbox.checked) {
     requestAutoSort();
   } else {
@@ -631,4 +741,4 @@ requestAnimationFrame(() => {
   }, 0);
 });
 
-window.addEventListener('beforeunload', () => beam.destroy());
+window.addEventListener("beforeunload", () => beam.destroy());

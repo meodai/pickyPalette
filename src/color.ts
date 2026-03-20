@@ -1,8 +1,8 @@
-import { converter, type Color } from 'culori';
-import type { RGB, Axis } from './types';
-import { AXES } from './types';
+import { converter, type Color } from "culori";
+import type { RGB, Axis } from "./types";
+import { AXES } from "./types";
 
-const toSRGB = converter('rgb');
+const toSRGB = converter("rgb");
 
 export function hexToRGB(hex: string): RGB {
   const c = toSRGB(hex);
@@ -13,7 +13,7 @@ export function hexToRGB(hex: string): RGB {
 const toHexByte = (v: number): string =>
   Math.min(255, Math.max(0, Math.round(v * 255)))
     .toString(16)
-    .padStart(2, '0');
+    .padStart(2, "0");
 
 export function rgbToHex(rgb: RGB): string {
   return `#${toHexByte(rgb[0])}${toHexByte(rgb[1])}${toHexByte(rgb[2])}`;
@@ -24,62 +24,87 @@ export function toVizPalette(p: string[]): RGB[] {
 }
 
 export const AXIS_NAMES: Record<string, [string, string, string]> = {
-  rgb: ['R', 'G', 'B'],
-  rgb6bit: ['R', 'G', 'B'],
-  rgb8bit: ['R', 'G', 'B'],
-  rgb12bit: ['R', 'G', 'B'],
-  rgb15bit: ['R', 'G', 'B'],
-  rgb18bit: ['R', 'G', 'B'],
-  oklab: ['a', 'b', 'L'],
-  okhsv: ['H', 'S', 'V'],
-  okhsvPolar: ['H', 'S', 'V'],
-  okhsl: ['H', 'S', 'L'],
-  okhslPolar: ['H', 'S', 'L'],
-  oklch: ['H', 'C', 'L'],
-  oklchPolar: ['H', 'C', 'L'],
-  oklrab: ['a', 'b', 'Lr'],
-  oklrch: ['H', 'C', 'Lr'],
-  oklrchPolar: ['H', 'C', 'Lr'],
-  oklchDiag: ['H', 'C\u2194', 'L'],
-  oklrchDiag: ['H', 'C\u2194', 'Lr'],
-  hsv: ['H', 'S', 'V'],
-  hsvPolar: ['H', 'S', 'V'],
-  hsl: ['H', 'S', 'L'],
-  hslPolar: ['H', 'S', 'L'],
-  hwb: ['H', 'W', 'B'],
-  hwbPolar: ['H', 'W', 'B'],
-  cielab: ['a*', 'b*', 'L*'],
-  cielch: ['H', 'C', 'L*'],
-  cielchPolar: ['H', 'C', 'L*'],
-  cielabD50: ['a*', 'b*', 'L*'],
-  cielchD50: ['H', 'C', 'L*'],
-  cielchD50Polar: ['H', 'C', 'L*'],
+  rgb: ["R", "G", "B"],
+  rgb6bit: ["R", "G", "B"],
+  rgb8bit: ["R", "G", "B"],
+  rgb12bit: ["R", "G", "B"],
+  rgb15bit: ["R", "G", "B"],
+  rgb18bit: ["R", "G", "B"],
+  oklab: ["a", "b", "L"],
+  okhsv: ["H", "S", "V"],
+  okhsvPolar: ["H", "S", "V"],
+  okhsl: ["H", "S", "L"],
+  okhslPolar: ["H", "S", "L"],
+  oklch: ["H", "C", "L"],
+  oklchPolar: ["H", "C", "L"],
+  oklrab: ["a", "b", "Lr"],
+  oklrch: ["H", "C", "Lr"],
+  oklrchPolar: ["H", "C", "Lr"],
+  oklchDiag: ["H", "C\u2194", "L"],
+  oklrchDiag: ["H", "C\u2194", "Lr"],
+  hsv: ["H", "S", "V"],
+  hsvPolar: ["H", "S", "V"],
+  hsl: ["H", "S", "L"],
+  hslPolar: ["H", "S", "L"],
+  hwb: ["H", "W", "B"],
+  hwbPolar: ["H", "W", "B"],
+  cielab: ["a*", "b*", "L*"],
+  cielch: ["H", "C", "L*"],
+  cielchPolar: ["H", "C", "L*"],
+  cielabD50: ["a*", "b*", "L*"],
+  cielchD50: ["H", "C", "L*"],
+  cielchD50Polar: ["H", "C", "L*"],
   cam16ucsD65: ["a'", "b'", "J'"],
-  cam16ucsD65Polar: ['H', "M'", "J'"],
-  spectrum: ['\u03BB', 'L', 'C'],
+  cam16ucsD65Polar: ["H", "M'", "J'"],
+  spectrum: ["\u03BB", "L", "C"],
 };
 
 const SLIDER_CULORI_MODE: Record<string, string> = {
-  okhsl: 'okhsl', okhslPolar: 'okhsl',
-  okhsv: 'okhsv', okhsvPolar: 'okhsv',
-  oklch: 'oklch', oklchPolar: 'oklch', oklchDiag: 'oklch',
-  oklrab: 'oklch', oklrch: 'oklch', oklrchPolar: 'oklch', oklrchDiag: 'oklch',
-  oklab: 'oklab',
-  hsl: 'hsl', hslPolar: 'hsl',
-  hsv: 'hsv', hsvPolar: 'hsv',
-  hwb: 'hwb', hwbPolar: 'hwb',
-  rgb: 'rgb', rgb6bit: 'rgb', rgb8bit: 'rgb', rgb12bit: 'rgb', rgb15bit: 'rgb', rgb18bit: 'rgb',
-  cielab: 'lab65', cielch: 'lch65', cielchPolar: 'lch65',
-  cielabD50: 'lab', cielchD50: 'lch', cielchD50Polar: 'lch',
+  okhsl: "okhsl",
+  okhslPolar: "okhsl",
+  okhsv: "okhsv",
+  okhsvPolar: "okhsv",
+  oklch: "oklch",
+  oklchPolar: "oklch",
+  oklchDiag: "oklch",
+  oklrab: "oklch",
+  oklrch: "oklch",
+  oklrchPolar: "oklch",
+  oklrchDiag: "oklch",
+  oklab: "oklab",
+  hsl: "hsl",
+  hslPolar: "hsl",
+  hsv: "hsv",
+  hsvPolar: "hsv",
+  hwb: "hwb",
+  hwbPolar: "hwb",
+  rgb: "rgb",
+  rgb6bit: "rgb",
+  rgb8bit: "rgb",
+  rgb12bit: "rgb",
+  rgb15bit: "rgb",
+  rgb18bit: "rgb",
+  cielab: "lab65",
+  cielch: "lch65",
+  cielchPolar: "lch65",
+  cielabD50: "lab",
+  cielchD50: "lch",
+  cielchD50Polar: "lch",
 };
 
 const SLIDER_COMPONENTS: Record<string, string[]> = {
-  okhsl: ['h', 's', 'l'], okhsv: ['h', 's', 'v'],
-  oklch: ['h', 'c', 'l'], oklab: ['a', 'b', 'l'],
-  hsl: ['h', 's', 'l'], hsv: ['h', 's', 'v'], hwb: ['h', 'w', 'b'],
-  rgb: ['r', 'g', 'b'],
-  lab65: ['a', 'b', 'l'], lch65: ['h', 'c', 'l'],
-  lab: ['a', 'b', 'l'], lch: ['h', 'c', 'l'],
+  okhsl: ["h", "s", "l"],
+  okhsv: ["h", "s", "v"],
+  oklch: ["h", "c", "l"],
+  oklab: ["a", "b", "l"],
+  hsl: ["h", "s", "l"],
+  hsv: ["h", "s", "v"],
+  hwb: ["h", "w", "b"],
+  rgb: ["r", "g", "b"],
+  lab65: ["a", "b", "l"],
+  lch65: ["h", "c", "l"],
+  lab: ["a", "b", "l"],
+  lch: ["h", "c", "l"],
 };
 
 const SLIDER_RANGES: Record<string, Record<string, [number, number]>> = {
@@ -133,24 +158,33 @@ export function computeSliderStops(colorModel: string, axis: Axis): string[] {
     const t = i / STEPS;
     const val = min + t * (max - min);
     const color: Record<string, number | string> = { mode: culoriMode };
-    comps.forEach((c) => { color[c] = c === varyComp ? val : centers[c]; });
+    comps.forEach((c) => {
+      color[c] = c === varyComp ? val : centers[c];
+    });
     const rgb = toSRGB(color as unknown as Color);
-    if (!rgb) { stops.push('#000000'); continue; }
-    const r = rgb.r ?? 0, g = rgb.g ?? 0, b = rgb.b ?? 0;
-    stops.push(rgbToHex([
-      Math.max(0, Math.min(1, isNaN(r) ? 0 : r)),
-      Math.max(0, Math.min(1, isNaN(g) ? 0 : g)),
-      Math.max(0, Math.min(1, isNaN(b) ? 0 : b)),
-    ]));
+    if (!rgb) {
+      stops.push("#000000");
+      continue;
+    }
+    const r = rgb.r ?? 0,
+      g = rgb.g ?? 0,
+      b = rgb.b ?? 0;
+    stops.push(
+      rgbToHex([
+        Math.max(0, Math.min(1, isNaN(r) ? 0 : r)),
+        Math.max(0, Math.min(1, isNaN(g) ? 0 : g)),
+        Math.max(0, Math.min(1, isNaN(b) ? 0 : b)),
+      ]),
+    );
   }
 
   // Shader inverts z-axis: colorCoords.z = 1 - progress
-  if (axis === 'z') stops.reverse();
+  if (axis === "z") stops.reverse();
   return stops;
 }
 
 export function isHueAxis(colorModel: string, axis: Axis): boolean {
-  const names = AXIS_NAMES[colorModel] || ['X', 'Y', 'Z'];
+  const names = AXIS_NAMES[colorModel] || ["X", "Y", "Z"];
   const axisIdx = AXES.indexOf(axis);
-  return names[axisIdx] === 'H';
+  return names[axisIdx] === "H";
 }

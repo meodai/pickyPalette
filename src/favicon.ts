@@ -1,4 +1,4 @@
-import type { PaletteViz } from 'palette-shader';
+import type { PaletteViz } from "palette-shader";
 
 const SIZE = 64;
 const RADIUS = 12;
@@ -6,7 +6,7 @@ const DEBOUNCE_MS = 300;
 
 const $link = document.querySelector<HTMLLinkElement>('link[rel="icon"]')!;
 const canvas = new OffscreenCanvas(SIZE, SIZE);
-const ctx = canvas.getContext('2d')!;
+const ctx = canvas.getContext("2d")!;
 let timer: ReturnType<typeof setTimeout> | null = null;
 
 function roundRectClip(): void {
@@ -30,24 +30,27 @@ function render(source: PaletteViz): void {
 
   // "P" overlay
   ctx.font = `bold ${SIZE * 0.65}px Iosevka Web, Iosevka, ui-monospace, SF Mono, monospace`;
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillStyle = '#fff';
-  ctx.shadowColor = 'rgba(0,0,0,0.5)';
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillStyle = "#fff";
+  ctx.shadowColor = "rgba(0,0,0,0.5)";
   ctx.shadowBlur = 4;
-  ctx.fillText('P', SIZE / 2, SIZE / 2 + 3);
-  ctx.shadowColor = 'transparent';
+  ctx.fillText("P", SIZE / 2, SIZE / 2 + 3);
+  ctx.shadowColor = "transparent";
   ctx.shadowBlur = 0;
 
   // Async PNG encoding
-  canvas.convertToBlob({ type: 'image/png' })
+  canvas
+    .convertToBlob({ type: "image/png" })
     .then((blob) => {
       const url = URL.createObjectURL(blob);
       const prev = $link.href;
       $link.href = url;
-      if (prev.startsWith('blob:')) URL.revokeObjectURL(prev);
+      if (prev.startsWith("blob:")) URL.revokeObjectURL(prev);
     })
-    .catch(() => { /* favicon is non-critical */ });
+    .catch(() => {
+      /* favicon is non-critical */
+    });
 }
 
 export function scheduleFaviconUpdate(getSource: () => PaletteViz): void {
