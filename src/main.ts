@@ -456,6 +456,45 @@ function buildMask(colorIndex: number): void {
   viz.compositeMask(palette[colorIndex], "raw", "closest");
 }
 
+let altMaskActive = false;
+
+let altMaskIndex = -1;
+
+function updateAltMask(altKey: boolean): void {
+  if (altKey) {
+    // While dragging, always reveal the dragged color's region
+    if (pointerState?.dragging && pointerState.dragIndex >= 0) {
+      buildMask(pointerState.dragIndex);
+      altMaskIndex = pointerState.dragIndex;
+      altMaskActive = true;
+      return;
+    }
+    // While hovering, reveal the region under the cursor
+    if (probeEvent) {
+      const rect = $canvasWrap.getBoundingClientRect();
+      const u = (probeEvent.clientX - rect.left) / rect.width;
+      const v = 1 - (probeEvent.clientY - rect.top) / rect.height;
+      if (u >= 0 && u <= 1 && v >= 0 && v <= 1 && viz.vizClosest) {
+        const closestColor = viz.getClosestColorAtUV(u, v);
+        if (closestColor) {
+          const idx = findPaletteIndex(closestColor);
+          if (idx >= 0 && idx !== altMaskIndex) {
+            buildMask(idx);
+            altMaskIndex = idx;
+          }
+          altMaskActive = true;
+          return;
+        }
+      }
+    }
+  }
+  if (!altKey && altMaskActive) {
+    viz.hideMask();
+    altMaskActive = false;
+    altMaskIndex = -1;
+  }
+}
+
 function findPaletteIndex(rgb: RGB): number {
   const tol = 4 / 255;
   for (let i = 0; i < palette.length; i++) {
@@ -470,24 +509,40 @@ function findPaletteIndex(rgb: RGB): number {
   return -1;
 }
 
+let lastClickTime = 0;
+let lastClickX = 0;
+let lastClickY = 0;
+const DBLCLICK_MS = 400;
+const DBLCLICK_DIST = 10;
+
 $canvasWrap.addEventListener("pointerdown", (e) => {
   if (e.button !== 0) return;
-  const moving = e.shiftKey && palette.length > 0 && !pickMode;
-  let moveIndex = -1;
-  if (moving && viz.vizClosest) {
+  const now = performance.now();
+  const isDblClick =
+    now - lastClickTime < DBLCLICK_MS &&
+    Math.hypot(e.clientX - lastClickX, e.clientY - lastClickY) < DBLCLICK_DIST;
+  lastClickTime = now;
+  lastClickX = e.clientX;
+  lastClickY = e.clientY;
+
+  const adding =
+    isDblClick || (e.metaKey || e.ctrlKey) || pickMode || palette.length === 0;
+
+  if (isDblClick) {
+    // Immediately add color at this position
     const { u, v, inBounds } = getUV(e);
     if (inBounds) {
-      const closestColor = viz.getClosestColorAtUV(u, v);
-      if (closestColor) moveIndex = findPaletteIndex(closestColor);
+      addColor(getRawHexAtUV(u, v));
     }
   }
+
   pointerState = {
     x: e.clientX,
     y: e.clientY,
     id: e.pointerId,
-    dragging: false,
-    dragIndex: moveIndex,
-    moving,
+    dragging: isDblClick,
+    dragIndex: isDblClick ? palette.length - 1 : adding ? -1 : selectedIndex,
+    moving: isDblClick || (!adding && selectedIndex >= 0),
   };
   $canvasWrap.setPointerCapture(e.pointerId);
 });
@@ -495,6 +550,7 @@ $canvasWrap.addEventListener("pointerdown", (e) => {
 $canvasWrap.addEventListener("pointermove", (e) => {
   probeEvent = e;
   if (probeRAF === null) probeRAF = requestAnimationFrame(updateProbe);
+  updateAltMask(e.altKey);
 
   if (!pointerState || pointerState.id !== e.pointerId) return;
   const dx = e.clientX - pointerState.x;
@@ -504,12 +560,10 @@ $canvasWrap.addEventListener("pointermove", (e) => {
     pointerState.dragging = true;
 
     if (pointerState.moving && pointerState.dragIndex >= 0) {
-      // Shift+drag: move existing color — show live viz, no mask
+      // Drag: edit selected color
       pushUndo();
-      selectColor(pointerState.dragIndex);
-      viz.updateView(false, true);
     } else {
-      // Normal drag: add a new color
+      // Cmd+drag or empty palette: add a new color
       const { u, v, inBounds } = getUV(e);
       if (inBounds) {
         addColor(getRawHexAtUV(u, v));
@@ -523,8 +577,6 @@ $canvasWrap.addEventListener("pointermove", (e) => {
     const { u, v, inBounds } = getUV(e);
     if (inBounds) {
       liveUpdateColor(pointerState.dragIndex, getRawHexAtUV(u, v));
-      // When moving (shift+drag), skip the mask — vizClosest updates live.
-      // When adding (normal drag), rebuild the reveal mask.
       if (!pointerState.moving && dragMaskRAF === null) {
         const idx = pointerState.dragIndex;
         dragMaskRAF = requestAnimationFrame(() => {
@@ -539,8 +591,8 @@ $canvasWrap.addEventListener("pointermove", (e) => {
 $canvasWrap.addEventListener("pointerup", (e) => {
   if (!pointerState || pointerState.id !== e.pointerId) return;
   const wasDragging = pointerState.dragging;
-  const wasMoving = pointerState.moving;
   const dragIndex = pointerState.dragIndex;
+  const wasAdding = !pointerState.moving;
   pointerState = null;
   if (dragMaskRAF !== null) {
     cancelAnimationFrame(dragMaskRAF);
@@ -555,29 +607,23 @@ $canvasWrap.addEventListener("pointerup", (e) => {
     return;
   }
 
-  // Shift+click (no drag): select the color under cursor
-  if (wasMoving && dragIndex >= 0) {
-    selectColor(dragIndex);
-    return;
-  }
-
   const { u, v, inBounds } = getUV(e);
   if (!inBounds) return;
 
-  if (pickMode) {
+  // Click (no drag)
+  if (pickMode || wasAdding) {
     addColor(getRawHexAtUV(u, v));
-    exitPickMode();
-    return;
-  }
-  if (palette.length === 0 || !viz.vizClosest) {
-    addColor(getRawHexAtUV(u, v));
+    if (pickMode) exitPickMode();
     return;
   }
 
-  const closestColor = viz.getClosestColorAtUV(u, v);
-  if (closestColor) {
-    const matchIndex = findPaletteIndex(closestColor);
-    if (matchIndex >= 0) selectColor(matchIndex);
+  // Click without cmd: select the color under cursor
+  if (viz.vizClosest) {
+    const closestColor = viz.getClosestColorAtUV(u, v);
+    if (closestColor) {
+      const matchIndex = findPaletteIndex(closestColor);
+      if (matchIndex >= 0) selectColor(matchIndex);
+    }
   }
 });
 
@@ -694,6 +740,10 @@ function updateProbe(): void {
 // ── Keyboard shortcuts ───────────────────────────────────────────────────────
 
 document.addEventListener("keydown", (e) => {
+  if (e.key === "Alt") {
+    updateAltMask(true);
+    return;
+  }
   const t = e.target;
   if (t instanceof HTMLTextAreaElement || t instanceof HTMLSelectElement) return;
   if (
@@ -723,6 +773,10 @@ document.addEventListener("keydown", (e) => {
       cancelDrag();
     } else if (pickMode) exitPickMode();
   }
+});
+
+document.addEventListener("keyup", (e) => {
+  if (e.key === "Alt") updateAltMask(false);
 });
 
 // ── Control event wiring ─────────────────────────────────────────────────────
