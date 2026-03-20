@@ -693,6 +693,8 @@ $canvasWrap.addEventListener("pointerup", (e) => {
     const fv = wasMoving ? Math.max(0, Math.min(1, v - oV)) : v;
     if (inBounds && dragIndex >= 0) setColorAt(dragIndex, getRawHexAtUV(fu, fv));
     if (pickMode) exitPickMode();
+    altMaskIndex = -1;
+    updateAltMask(e.altKey);
     updateProbe();
     return;
   }
