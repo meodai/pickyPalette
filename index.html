@@ -78,6 +78,54 @@
         shift in real time.
       </p>
 
+      <h2>Keys &amp; Shortcuts</h2>
+      <table class="picker__keys">
+        <tr>
+          <td><kbd>C</kbd></td>
+          <td>Toggle pick mode (add color on next click)</td>
+        </tr>
+        <tr>
+          <td><kbd>Cmd</kbd> / <kbd>Ctrl</kbd> + click</td>
+          <td>Add a new color</td>
+        </tr>
+        <tr>
+          <td>Double-click</td>
+          <td>Add a new color (hold to drag-adjust)</td>
+        </tr>
+        <tr>
+          <td>Click</td>
+          <td>Select the closest color under cursor</td>
+        </tr>
+        <tr>
+          <td>Drag</td>
+          <td>Move the selected color</td>
+        </tr>
+        <tr>
+          <td><kbd>Cmd</kbd> / <kbd>Ctrl</kbd> + <kbd>Z</kbd></td>
+          <td>Undo</td>
+        </tr>
+        <tr>
+          <td><kbd>Delete</kbd> / <kbd>Backspace</kbd></td>
+          <td>Remove color under cursor (canvas) or selected color</td>
+        </tr>
+        <tr>
+          <td><kbd>Escape</kbd></td>
+          <td>Cancel drag or exit pick mode</td>
+        </tr>
+        <tr>
+          <td><kbd>Alt</kbd> / <kbd>Option</kbd></td>
+          <td>Reveal raw color space under hovered region</td>
+        </tr>
+        <tr>
+          <td><kbd>Shift</kbd> + <kbd>Alt</kbd> / <kbd>Option</kbd></td>
+          <td>Isolate color (flat region stays, rest shows raw)</td>
+        </tr>
+        <tr>
+          <td>Scroll / two-finger swipe</td>
+          <td>Adjust position slider (3rd axis)</td>
+        </tr>
+      </table>
+
       <h2>User Manual / Glossary</h2>
       <details class="picker__manual">
         <summary>Adding Colors</summary>
@@ -108,11 +156,11 @@
       <details class="picker__manual">
         <summary>Inspecting a Color</summary>
         <p>
-          Hold <kbd>Shift</kbd> and hover a swatch to isolate it on the canvas —
-          only that color's region is shown, the rest reveals the raw color
-          space. Hold <kbd>Alt</kbd> / <kbd>Option</kbd> while hovering or
-          dragging on the canvas to reveal the raw color space under the color
-          region at the cursor.
+          Hold <kbd>Alt</kbd> / <kbd>Option</kbd> while hovering the canvas or
+          a swatch to reveal the raw color space under that color's region.
+          Add <kbd>Shift</kbd> to invert — isolate the color so only its region
+          stays flat while the rest reveals the raw color space.
+          Both work while dragging too.
         </p>
       </details>
       <details class="picker__manual">
@@ -204,54 +252,6 @@
           token from an external source to pull colors in.
         </p>
       </details>
-
-      <h2>Keys &amp; Shortcuts</h2>
-      <table class="picker__keys">
-        <tr>
-          <td><kbd>C</kbd></td>
-          <td>Toggle pick mode (add color on next click)</td>
-        </tr>
-        <tr>
-          <td><kbd>Cmd</kbd> / <kbd>Ctrl</kbd> + click</td>
-          <td>Add a new color</td>
-        </tr>
-        <tr>
-          <td>Double-click</td>
-          <td>Add a new color (hold to drag-adjust)</td>
-        </tr>
-        <tr>
-          <td>Click</td>
-          <td>Select the closest color under cursor</td>
-        </tr>
-        <tr>
-          <td>Drag</td>
-          <td>Move the selected color</td>
-        </tr>
-        <tr>
-          <td><kbd>Cmd</kbd> / <kbd>Ctrl</kbd> + <kbd>Z</kbd></td>
-          <td>Undo</td>
-        </tr>
-        <tr>
-          <td><kbd>Delete</kbd> / <kbd>Backspace</kbd></td>
-          <td>Remove selected color</td>
-        </tr>
-        <tr>
-          <td><kbd>Escape</kbd></td>
-          <td>Cancel drag or exit pick mode</td>
-        </tr>
-        <tr>
-          <td><kbd>Alt</kbd> / <kbd>Option</kbd></td>
-          <td>Reveal raw color space under cursor region</td>
-        </tr>
-        <tr>
-          <td><kbd>Shift</kbd> + hover swatch</td>
-          <td>Isolate color on canvas</td>
-        </tr>
-        <tr>
-          <td>Scroll / two-finger swipe</td>
-          <td>Adjust position slider (3rd axis)</td>
-        </tr>
-      </table>
 
       <p class="picker__links">
         Built with
