@@ -1,6 +1,7 @@
 import { PaletteViz } from 'palette-shader';
 import { converter } from 'culori';
 import { SourceSession, TargetSession, extractColorTokens, createCollection } from 'token-beam';
+import SortWorker from './sort-worker.js?worker';
 
 // ── Color conversion helpers ──────────────────────────────────────────────────
 
@@ -406,6 +407,47 @@ $gamutClipCheckbox.addEventListener('change', () => {
 });
 $tools.appendChild(labeled('Clip to sRGB', $gamutClipCheckbox));
 
+// Auto-sort toggle
+const $autoSortCheckbox = document.createElement('input');
+$autoSortCheckbox.type = 'checkbox';
+$autoSortCheckbox.checked = true;
+$autoSortCheckbox.addEventListener('change', () => {
+  if ($autoSortCheckbox.checked) {
+    requestAutoSort();
+  } else {
+    sortedPalette = null;
+    renderSwatches();
+  }
+  scheduleHashUpdate();
+});
+$tools.appendChild(labeled('Auto-Sort Color Swatches', $autoSortCheckbox));
+
+// ── Sort worker ──────────────────────────────────────────────────────────────
+
+const sortWorker = new SortWorker();
+let sortRequestId = 0;
+let sortedPalette = null; // sorted hex array or null
+
+sortWorker.onmessage = (e) => {
+  const { type, payload } = e.data;
+  if (type === 'sorted' && payload.requestId === sortRequestId) {
+    sortedPalette = payload.sorted;
+    renderSwatches();
+    syncPasteField();
+    syncVizPalette();
+    scheduleMaskUpdate();
+  }
+};
+
+function requestAutoSort() {
+  if (!$autoSortCheckbox.checked || palette.length < 2) {
+    sortedPalette = null;
+    return;
+  }
+  sortRequestId++;
+  sortWorker.postMessage({ hexes: [...palette], requestId: sortRequestId });
+}
+
 // Position slider
 const $posSlider = document.createElement('input');
 $posSlider.type = 'range';
@@ -546,8 +588,12 @@ updateSliderLabel();
 
 // ── Palette management ────────────────────────────────────────────────────────
 
+function displayPalette() {
+  return sortedPalette && sortedPalette.length === palette.length ? sortedPalette : palette;
+}
+
 function vizPalette() {
-  return toVizPalette(palette);
+  return toVizPalette(displayPalette());
 }
 
 function syncVizPalette() {
@@ -568,6 +614,7 @@ function addColor(hex) {
   if (palette.length >= MAX_COLORS) return;
   pushUndo();
   palette.push(hex);
+  sortedPalette = null; // clear stale sort while worker runs
   syncVizPalette();
   selectedIndex = palette.length - 1;
   renderSwatches();
@@ -575,6 +622,7 @@ function addColor(hex) {
   scheduleMaskUpdate();
   scheduleHashUpdate();
   beamSendPalette();
+  requestAutoSort();
 }
 
 function removeColor(index) {
@@ -582,22 +630,26 @@ function removeColor(index) {
   palette.splice(index, 1);
   if (selectedIndex >= palette.length) selectedIndex = palette.length - 1;
   if (palette.length === 0) selectedIndex = -1;
+  sortedPalette = null;
   syncVizPalette();
   renderSwatches();
   syncPasteField();
   scheduleMaskUpdate();
   scheduleHashUpdate();
   beamSendPalette();
+  requestAutoSort();
 }
 
 function setColorAt(index, hex) {
   palette[index] = hex;
+  sortedPalette = null;
   syncVizPalette();
   renderSwatches();
   syncPasteField();
   scheduleMaskUpdate();
   scheduleHashUpdate();
   beamSendPalette();
+  requestAutoSort();
 }
 
 function selectColor(index) {
@@ -612,25 +664,38 @@ function renderSwatches() {
   // Remove all swatches but keep $addBtn
   while ($swatches.firstChild !== $addBtn) $swatches.firstChild.remove();
 
-  palette.forEach((hex, i) => {
+  const dp = displayPalette();
+  const usedSrcIndices = new Set();
+
+  dp.forEach((hex, i) => {
+    // Map display index back to source palette index (handle duplicates)
+    let srcIndex = -1;
+    for (let j = 0; j < palette.length; j++) {
+      if (palette[j] === hex && !usedSrcIndices.has(j)) {
+        srcIndex = j;
+        break;
+      }
+    }
+    if (srcIndex >= 0) usedSrcIndices.add(srcIndex);
     const $s = document.createElement('span');
     $s.className = 'picker__swatch';
     $s.style.background = hex;
-    $s.dataset.index = i;
-    if (i === selectedIndex) $s.classList.add('is-selected');
+    $s.dataset.index = srcIndex;
+    if (srcIndex === selectedIndex) $s.classList.add('is-selected');
 
     const $rm = document.createElement('button');
     $rm.className = 'picker__swatch__remove';
     $rm.textContent = '\u00d7';
     $rm.addEventListener('click', (e) => {
       e.stopPropagation();
-      removeColor(i);
+      removeColor(srcIndex);
     });
     $s.appendChild($rm);
 
-    $s.addEventListener('click', () => selectColor(i));
+    $s.addEventListener('click', () => selectColor(srcIndex));
     $s.addEventListener('mouseenter', (e) => {
       if (!e.shiftKey || pointerState?.dragging || !vizClosest) return;
+      // Find this color's index in the viz palette (display order)
       buildHighlightMask(i);
     });
     $s.addEventListener('mouseleave', () => {
@@ -968,11 +1033,13 @@ function undo() {
   if (!state) return;
   palette = state.palette;
   selectedIndex = state.selectedIndex;
+  sortedPalette = null;
   syncVizPalette();
   renderSwatches();
   syncPasteField();
   scheduleMaskUpdate();
   scheduleHashUpdate();
+  requestAutoSort();
 }
 
 // ── Keyboard shortcuts ────────────────────────────────────────────────────────
@@ -1022,7 +1089,7 @@ $paste.addEventListener('input', () => {
 
 function syncPasteField() {
   pasteIsSync = true;
-  $paste.value = palette.join(', ');
+  $paste.value = displayPalette().join(', ');
   pasteIsSync = false;
 }
 
@@ -1031,12 +1098,14 @@ function setPalette(colors) {
   pushUndo();
   palette = colors.slice(0, MAX_COLORS);
   selectedIndex = palette.length > 0 ? 0 : -1;
+  sortedPalette = null;
   syncVizPalette();
   renderSwatches();
   syncPasteField();
   scheduleMaskUpdate();
   scheduleHashUpdate();
   beamSendPalette();
+  requestAutoSort();
 }
 
 // ── URL hash state ────────────────────────────────────────────────────────────
@@ -1055,6 +1124,7 @@ function encodeHash() {
     ...$outlineCheckbox.checked && { outline: '1' },
     ...!$revealCheckbox.checked && { reveal: '0' },
     ...$gamutClipCheckbox.checked && { gamut: '1' },
+    ...!$autoSortCheckbox.checked && { sort: '0' },
   });
   return colorStr ? `#colors/${colorStr}?${params}` : `#?${params}`;
 }
@@ -1083,6 +1153,7 @@ function decodeHash(hash) {
     outline: params.get('outline') === '1',
     reveal: params.get('reveal') !== '0',
     gamut: params.get('gamut') === '1',
+    autoSort: params.get('sort') !== '0',
   };
 }
 
@@ -1114,6 +1185,8 @@ function applyHashState(state) {
   $gamutClipCheckbox.checked = state.gamut;
   vizRaw.gamutClip = state.gamut;
 
+  $autoSortCheckbox.checked = state.autoSort;
+
   vizRaw.colorModel = state.colorModel;
   vizRaw.distanceMetric = state.distanceMetric;
   vizRaw.position = state.pos;
@@ -1137,6 +1210,7 @@ function applyHashState(state) {
   updateAxisButtonLabels();
   renderSwatches();
   updateView();
+  requestAutoSort();
 }
 
 // ── Token Beam ────────────────────────────────────────────────────────────────
@@ -1164,8 +1238,9 @@ function beamClearStatus() {
 
 function beamSendPalette() {
   if (!beamSession || $beamMode.value !== 'send' || !beamSession.hasPeers() || palette.length === 0) return;
+  const dp = displayPalette();
   const tokens = {};
-  palette.forEach((hex, i) => {
+  dp.forEach((hex, i) => {
     tokens[`color-${i}`] = hex;
   });
   beamSession.sync(createCollection('picker-palette', tokens));
