@@ -656,11 +656,12 @@ function updateProbe(): void {
 // ── Keyboard shortcuts ───────────────────────────────────────────────────────
 
 document.addEventListener("keydown", (e) => {
+  const t = e.target;
+  if (t instanceof HTMLTextAreaElement || t instanceof HTMLSelectElement) return;
   if (
-    e.target instanceof HTMLInputElement ||
-    e.target instanceof HTMLSelectElement ||
-    e.target instanceof HTMLTextAreaElement ||
-    e.target instanceof HTMLButtonElement
+    t instanceof HTMLInputElement &&
+    t.type !== "range" &&
+    t.type !== "checkbox"
   )
     return;
   if ((e.metaKey || e.ctrlKey) && e.key === "z") {
