@@ -110,7 +110,12 @@ export function createControls(
   const $inner = document.createElement("div");
   $inner.className = "picker__settings-inner";
   $tools.appendChild($inner);
-  $inner.appendChild($modelRow);
+  let settingsIndex = 0;
+  function appendSetting(el: HTMLElement): void {
+    el.style.setProperty("--i", String(settingsIndex++));
+    $inner.appendChild(el);
+  }
+  appendSetting($modelRow);
 
   // ── Distance metric ────────────────────────────────────────────────
   const $distanceMetric = document.createElement("select");
@@ -132,14 +137,14 @@ export function createControls(
       <option value="rgb">RGB</option>
     </optgroup>
   `;
-  $inner.appendChild(labeled("Distance metric", $distanceMetric));
+  appendSetting(labeled("Distance metric", $distanceMetric));
 
   // ── Toggle checkboxes ──────────────────────────────────────────────
   function checkbox(label: string, checked: boolean): HTMLInputElement {
     const $cb = document.createElement("input");
     $cb.type = "checkbox";
     $cb.checked = checked;
-    $inner.appendChild(labeled(label, $cb));
+    appendSetting(labeled(label, $cb));
     return $cb;
   }
 
