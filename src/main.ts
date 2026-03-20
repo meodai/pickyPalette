@@ -809,6 +809,7 @@ $canvasWrap.addEventListener("pointerup", (e) => {
 
   if (pickMode || !wasMoving) {
     addColor(getRawHexAtUV(u, v));
+    lastClickTime = 0; // prevent next click from being detected as double-click
     if (pickMode) setPickMode(false);
     return;
   }
