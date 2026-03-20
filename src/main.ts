@@ -595,11 +595,7 @@ $canvasWrap.addEventListener("pointerdown", (e) => {
   $canvasWrap.setPointerCapture(e.pointerId);
 });
 
-function updateCanvasCursor(e?: { metaKey: boolean; ctrlKey: boolean }): void {
-  if (e) {
-    modifierKeys.meta = e.metaKey;
-    modifierKeys.ctrl = e.ctrlKey;
-  }
+function updateCanvasCursor(): void {
   const adding =
     modifierKeys.meta || modifierKeys.ctrl || pickMode || palette.length === 0;
   const grabbing = pointerState?.dragging ?? false;
@@ -609,7 +605,9 @@ function updateCanvasCursor(e?: { metaKey: boolean; ctrlKey: boolean }): void {
 
 $canvasWrap.addEventListener("pointermove", (e) => {
   probeEvent = e;
-  updateCanvasCursor(e);
+  modifierKeys.meta = e.metaKey;
+  modifierKeys.ctrl = e.ctrlKey;
+  updateCanvasCursor();
   if (probeRAF === null) probeRAF = requestAnimationFrame(updateProbe);
   updateAltMask(e.altKey);
 
@@ -619,7 +617,7 @@ $canvasWrap.addEventListener("pointermove", (e) => {
 
   if (!pointerState.dragging && Math.hypot(dx, dy) > DRAG_THRESHOLD) {
     pointerState.dragging = true;
-    updateCanvasCursor(e);
+    stateDidChange();
 
     if (pointerState.moving && pointerState.dragIndex >= 0) {
       pushUndo();
@@ -716,7 +714,6 @@ function adjustPosition(delta: number): void {
   controls.$posSlider.value = String(v);
   viz.setPosition(v);
   refreshView();
-  updateProbe();
 }
 
 $canvasWrap.addEventListener(
@@ -825,10 +822,8 @@ function isTextInput(e: KeyboardEvent): boolean {
 }
 
 document.addEventListener("keydown", (e) => {
-  if (e) {
-    modifierKeys.meta = e.metaKey;
-    modifierKeys.ctrl = e.ctrlKey;
-  }
+  modifierKeys.meta = e.metaKey;
+  modifierKeys.ctrl = e.ctrlKey;
   stateDidChange();
   if (e.key === "Alt") {
     updateAltMask(true);
