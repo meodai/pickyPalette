@@ -216,6 +216,7 @@ let _removeSortTimer: ReturnType<typeof setTimeout> | null = null;
 
 function removeColor(index: number): void {
   pushUndo();
+  viz.hideHighlight();
   // Remove from sorted palette too so the swatch disappears in place
   if (sortedPalette) {
     const hex = palette[index];
