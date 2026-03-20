@@ -78,38 +78,49 @@ function vizPalette(): RGB[] {
 const controls = createControls($tools, $sliderWrap);
 const viz = createVizManager($canvasWrap);
 
+function flipSwatches(updateFn: () => void): void {
+  // FLIP: record old positions keyed by hex
+  const oldRects = new Map<string, DOMRect>();
+  $swatches.querySelectorAll<HTMLElement>(".picker__swatch").forEach(($s) => {
+    const name = $s.style.viewTransitionName;
+    if (name) oldRects.set(name, $s.getBoundingClientRect());
+  });
+
+  updateFn();
+
+  // FLIP: record new positions and animate
+  $swatches.querySelectorAll<HTMLElement>(".picker__swatch").forEach(($s, i) => {
+    const name = $s.style.viewTransitionName;
+    const oldRect = name ? oldRects.get(name) : undefined;
+    if (!oldRect) return;
+    const newRect = $s.getBoundingClientRect();
+    const dx = oldRect.left - newRect.left;
+    if (Math.abs(dx) < 1) return;
+    $s.animate(
+      [
+        { transform: `translateX(${dx}px)` },
+        { transform: "translateX(0)" },
+      ],
+      {
+        duration: 300,
+        easing: "cubic-bezier(0.3, 0.7, 0, 1)",
+        delay: i * Math.max(5, 150 / oldRects.size),
+      },
+    );
+  });
+}
+
 const sort = createSortManager((sorted) => {
-  // Don't reorder the viz palette mid-drag — the drag uses palette insertion
-  // indices for setColor(), so reordering would update the wrong viz slot.
-  // setColorAt() at drag end will re-request a sort with the final color.
-  if (pointerState?.dragging) return;
+  if (pointerState) return;
   sortedPalette = sorted;
 
-  const update = () => {
+  flipSwatches(() => {
     viz.syncPalette(vizPalette());
     renderSwatches();
     syncPasteField();
     viz.updateView(pickMode, palette.length > 0);
     beam.sendPalette();
-  };
-
-  if (document.startViewTransition) {
-    const t = document.startViewTransition(update);
-    t.ready.then(() => {
-      const dp = displayPalette();
-      const style = document.createElement("style");
-      style.textContent = dp
-        .map(
-          (hex, i) =>
-            `::view-transition-group(swatch-${hex.replace("#", "")}) { animation-delay: ${i * 50}ms; }`,
-        )
-        .join("\n");
-      document.head.appendChild(style);
-      t.finished.then(() => style.remove());
-    });
-  } else {
-    update();
-  }
+  });
 });
 
 const beam = createBeamManager(
@@ -294,7 +305,6 @@ function renderSwatches(): void {
     $s.className = "picker__swatch";
     $s.style.background = hex;
     $s.style.viewTransitionName = `swatch-${hex.replace("#", "")}`;
-    $s.style.setProperty("--i", String(displayIdx));
     $s.dataset.index = String(srcIndex);
     if (srcIndex === selectedIndex) $s.classList.add("is-selected");
 
@@ -335,9 +345,8 @@ $paste.addEventListener("input", () => {
     .split(/[\s,]+/)
     .map((s) => s.trim().replace(/^#?/, "#"))
     .filter((s) => /^#([0-9a-f]{3}){1,2}$/i.test(s));
-  if (colors.length < 1) return;
   setPalette(colors);
-  closeIO();
+  if (colors.length > 0) closeIO();
 });
 
 function syncPasteField(): void {
