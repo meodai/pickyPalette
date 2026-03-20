@@ -513,6 +513,12 @@ input[type="range"]::-moz-range-thumb {
   z-index: 3;
 }
 
+.picker__canvas-wrap canvas.highlight-canvas {
+  image-rendering: auto;
+  z-index: 4;
+  pointer-events: none;
+}
+
 /* ── Position slider ───────────────────────────────────────────────────── */
 
 .picker__slider {

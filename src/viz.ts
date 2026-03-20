@@ -21,6 +21,9 @@ export interface VizManager {
   showMask(): void;
   hideMask(): void;
 
+  highlightRegion(hex: string): void;
+  hideHighlight(): void;
+
   setAxis(axis: Axis): void;
   setPosition(pos: number): void;
   setColorModel(model: string): void;
@@ -66,6 +69,13 @@ export function createVizManager($canvasWrap: HTMLElement): VizManager {
   maskCanvas.style.display = "none";
   const maskCtx = maskCanvas.getContext("2d")!;
   $canvasWrap.appendChild(maskCanvas);
+
+  // Highlight overlay for swatch hover
+  const highlightCanvas = document.createElement("canvas");
+  highlightCanvas.className = "highlight-canvas";
+  highlightCanvas.style.display = "none";
+  const highlightCtx = highlightCanvas.getContext("2d")!;
+  $canvasWrap.appendChild(highlightCanvas);
 
   function ensureVizClosest(vizPalette: RGB[]): PaletteViz | null {
     if (vizClosest) return vizClosest;
@@ -184,6 +194,76 @@ export function createVizManager($canvasWrap: HTMLElement): VizManager {
     manager.updateView(false, true);
   }
 
+  function highlightRegion(hex: string): void {
+    if (!vizClosest) return;
+    vizClosest.getColorAtUV(0.5, 0.5); // force render
+
+    const w = vizClosest.canvas.width;
+    const h = vizClosest.canvas.height;
+
+    const gl = vizClosest.canvas.getContext("webgl2")!;
+    const px = new Uint8Array(w * h * 4);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    gl.readPixels(0, 0, w, h, gl.RGBA, gl.UNSIGNED_BYTE, px);
+
+    const sel = hexToRGB(hex);
+    const sr = Math.round(sel[0] * 255);
+    const sg = Math.round(sel[1] * 255);
+    const sb = Math.round(sel[2] * 255);
+    const tol = 3;
+
+    if (highlightCanvas.width !== w || highlightCanvas.height !== h) {
+      highlightCanvas.width = w;
+      highlightCanvas.height = h;
+    }
+
+    // Draw matched region as solid black (flipped Y), then use drop-shadow for outline
+    const imageData = highlightCtx.createImageData(w, h);
+    const out = imageData.data;
+    for (let row = 0; row < h; row++) {
+      const srcRow = (h - 1 - row) * w * 4;
+      const dstRow = row * w * 4;
+      for (let col = 0; col < w; col++) {
+        const si = srcRow + col * 4;
+        const di = dstRow + col * 4;
+        if (
+          Math.abs(px[si] - sr) <= tol &&
+          Math.abs(px[si + 1] - sg) <= tol &&
+          Math.abs(px[si + 2] - sb) <= tol
+        ) {
+          out[di + 3] = 255; // opaque black
+        }
+      }
+    }
+    highlightCtx.putImageData(imageData, 0, 0);
+
+    // Composite: draw drop-shadow outlines, then clear the filled region
+    const s = matchMedia("(prefers-color-scheme: dark)").matches
+      ? "black"
+      : "white";
+    const d = 2;
+    highlightCtx.filter =
+      `drop-shadow(${d}px 0 0 ${s}) drop-shadow(-${d}px 0 0 ${s}) ` +
+      `drop-shadow(0 ${d}px 0 ${s}) drop-shadow(0 -${d}px 0 ${s})`;
+    highlightCtx.drawImage(highlightCanvas, 0, 0);
+    highlightCtx.filter = "none";
+
+    // Erase the interior so only the outline remains.
+    // putImageData ignores compositing, so draw via a temp canvas.
+    const tmp = new OffscreenCanvas(w, h);
+    const tmpCtx = tmp.getContext("2d")!;
+    tmpCtx.putImageData(imageData, 0, 0);
+    highlightCtx.globalCompositeOperation = "destination-out";
+    highlightCtx.drawImage(tmp, 0, 0);
+    highlightCtx.globalCompositeOperation = "source-over";
+
+    highlightCanvas.style.display = "";
+  }
+
+  function hideHighlight(): void {
+    highlightCanvas.style.display = "none";
+  }
+
   function updateView(pickMode: boolean, hasColors: boolean): void {
     if (pickMode) {
       vizRaw.canvas.style.zIndex = "2";
@@ -216,6 +296,8 @@ export function createVizManager($canvasWrap: HTMLElement): VizManager {
     compositeMask,
     showMask,
     hideMask,
+    highlightRegion,
+    hideHighlight,
 
     setAxis(axis: Axis) {
       currentAxis = axis;

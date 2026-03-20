@@ -302,10 +302,17 @@ function renderSwatches(): void {
 
     $s.addEventListener("click", () => selectColor(srcIndex));
     $s.addEventListener("mouseenter", (e) => {
-      if (!e.shiftKey || pointerState?.dragging || !viz.vizClosest) return;
-      viz.compositeMask(hex, "closest", "raw");
+      if (pointerState?.dragging || !viz.vizClosest) return;
+      if (e.shiftKey) {
+        viz.compositeMask(hex, "closest", "raw");
+      } else {
+        viz.highlightRegion(hex);
+      }
     });
-    $s.addEventListener("mouseleave", () => viz.hideMask());
+    $s.addEventListener("mouseleave", () => {
+      viz.hideMask();
+      viz.hideHighlight();
+    });
     $swatches.insertBefore($s, $addBtn);
   });
 
