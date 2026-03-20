@@ -89,11 +89,12 @@ kbd {
   letter-spacing: -0.03em;
   font-weight: 200;
   margin-top: 1.5rem;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.7rem;
 }
 
 .picker__about p {
   margin-bottom: 0.5em;
+  padding-inline-start: 1.4rem;
 }
 
 .picker__about p + p {
@@ -125,12 +126,16 @@ kbd {
 }
 
 .picker__manual summary {
-  padding: 0.4rem 0.75rem 0.4rem 0.5rem;
+  padding: 0.4rem 0.75rem 0.4rem 1.4rem;
   cursor: pointer;
   font-size: 0.85em;
   font-weight: 400;
   letter-spacing: 0.02em;
   transition: background 0.05s linear;
+}
+
+.picker__manual summary {
+  list-style: none;
 }
 
 .picker__manual summary:hover {
@@ -140,7 +145,7 @@ kbd {
 
 .picker__manual p {
   font-size: 0.8em;
-  padding: 0.4rem 0.75rem 0.6rem;
+  padding: 0.4rem 1.4rem 0.6rem 1.4rem;
   color: var(--c-surface-on);
   border-top: var(--s-line) solid var(--c-border);
 }
