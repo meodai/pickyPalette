@@ -141,7 +141,12 @@ let pickMode = false;
 const modifierKeys = { meta: false, ctrl: false, alt: false, shift: false };
 let hoveredSwatch: { hex: string; index: number } | null = null;
 
-function syncModifiers(e: { metaKey: boolean; ctrlKey: boolean; altKey: boolean; shiftKey: boolean }): void {
+function syncModifiers(e: {
+  metaKey: boolean;
+  ctrlKey: boolean;
+  altKey: boolean;
+  shiftKey: boolean;
+}): void {
   modifierKeys.meta = e.metaKey;
   modifierKeys.ctrl = e.ctrlKey;
   modifierKeys.alt = e.altKey;
@@ -497,10 +502,15 @@ let pointerState: {
 } | null = null;
 let dragMaskRAF: number | null = null;
 
-function findColorUV(hex: string, nearU: number, nearV: number): [number, number] {
+function findColorUV(
+  hex: string,
+  nearU: number,
+  nearV: number,
+): [number, number] {
   const canvas = viz.vizRaw.canvas;
   const gl = canvas.getContext("webgl2")!;
-  const w = canvas.width, h = canvas.height;
+  const w = canvas.width,
+    h = canvas.height;
   const px = new Uint8Array(w * h * 4);
   viz.getRawColorAtUV(0.5, 0.5);
   gl.bindFramebuffer(gl.FRAMEBUFFER, null);
@@ -511,11 +521,15 @@ function findColorUV(hex: string, nearU: number, nearV: number): [number, number
   const tg = Math.round(target[1] * 255);
   const tb = Math.round(target[2] * 255);
 
-  let bestU = nearU, bestV = nearV, bestDist = Infinity;
+  let bestU = nearU,
+    bestV = nearV,
+    bestDist = Infinity;
   for (let y = 0; y < h; y++) {
     for (let x = 0; x < w; x++) {
       const i = (y * w + x) * 4;
-      const dr = px[i] - tr, dg = px[i + 1] - tg, db = px[i + 2] - tb;
+      const dr = px[i] - tr,
+        dg = px[i + 1] - tg,
+        db = px[i + 2] - tb;
       const d = dr * dr + dg * dg + db * db;
       if (d < bestDist) {
         bestDist = d;
@@ -607,7 +621,10 @@ function updateAltMask(): void {
     }
     if (probeEvent) {
       const idx = paletteIndexAtCursor(probeEvent);
-      if (idx >= 0 && (idx !== altMaskIndex || modifierKeys.shift !== altMaskShift)) {
+      if (
+        idx >= 0 &&
+        (idx !== altMaskIndex || modifierKeys.shift !== altMaskShift)
+      ) {
         if (modifierKeys.shift) {
           viz.compositeMask(palette[idx], "closest", "raw");
         } else {
@@ -675,11 +692,16 @@ $canvasWrap.addEventListener("pointerdown", (e) => {
   }
 
   // Compute offset for relative dragging
-  let offsetU = 0, offsetV = 0;
+  let offsetU = 0,
+    offsetV = 0;
   const isMoving = !adding && selectedIndex >= 0;
   if (isMoving && !isDblClick) {
     const { u: clickU, v: clickV } = getUV(e);
-    const [colorU, colorV] = findColorUV(palette[selectedIndex], clickU, clickV);
+    const [colorU, colorV] = findColorUV(
+      palette[selectedIndex],
+      clickU,
+      clickV,
+    );
     offsetU = clickU - colorU;
     offsetV = clickV - colorV;
   }
@@ -854,8 +876,12 @@ $canvasWrap.addEventListener(
   { passive: false },
 );
 
-$canvasWrap.addEventListener("touchend", () => { touchState = null; });
-$canvasWrap.addEventListener("touchcancel", () => { touchState = null; });
+$canvasWrap.addEventListener("touchend", () => {
+  touchState = null;
+});
+$canvasWrap.addEventListener("touchcancel", () => {
+  touchState = null;
+});
 
 // ── Cursor probe ─────────────────────────────────────────────────────────────
 
@@ -964,7 +990,8 @@ document.addEventListener("keydown", (e) => {
 document.addEventListener("keyup", (e) => {
   syncModifiers(e);
   stateDidChange();
-  if (e.key === "Alt" || (e.key === "Shift" && modifierKeys.alt)) updateAltMask();
+  if (e.key === "Alt" || (e.key === "Shift" && modifierKeys.alt))
+    updateAltMask();
 });
 
 // ── Control event wiring ─────────────────────────────────────────────────────
