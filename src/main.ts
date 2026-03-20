@@ -82,6 +82,7 @@ import {
   toVizPalette,
   AXIS_NAMES,
   isHueAxis,
+  getSliderValue,
 } from "./color";
 import { createControls } from "./controls";
 import { createVizManager } from "./viz";
@@ -432,7 +433,19 @@ function renderSwatches(): void {
     });
     $s.appendChild($rm);
 
-    $s.addEventListener("click", () => selectColor(srcIndex));
+    $s.addEventListener("click", () => {
+      selectColor(srcIndex);
+      const sliderVal = getSliderValue(
+        hex,
+        controls.$colorModel.value,
+        controls.axis,
+      );
+      if (sliderVal !== null) {
+        controls.$posSlider.value = String(sliderVal);
+        viz.setPosition(sliderVal);
+        refreshView();
+      }
+    });
     $s.addEventListener("mouseenter", () => {
       hoveredSwatch = { hex, index: srcIndex };
       updateSwatchHover();
