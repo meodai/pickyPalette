@@ -6,6 +6,7 @@ import { createVizManager } from './viz';
 import { createSortManager } from './sort';
 import { createBeamManager } from './beam';
 import { encodeHash, decodeHash } from './hash';
+import { scheduleFaviconUpdate as _schedFavicon } from './favicon';
 import type { HashState } from './types';
 
 // ── DOM refs ─────────────────────────────────────────────────────────────────
@@ -84,45 +85,8 @@ const beam = createBeamManager(
   { getDisplayPalette: displayPalette, setPalette: (colors) => setPalette(colors), closeIO },
 );
 
-// ── Favicon ──────────────────────────────────────────────────────────────────
-
-const FAVICON_SIZE = 64;
-const $favicon = document.querySelector<HTMLLinkElement>('link[rel="icon"]')!;
-let _faviconTimer: ReturnType<typeof setTimeout> | null = null;
-
 function scheduleFaviconUpdate(): void {
-  if (_faviconTimer !== null) return;
-  _faviconTimer = setTimeout(() => {
-    _faviconTimer = null;
-    updateFavicon();
-  }, 300);
-}
-
-function updateFavicon(): void {
-  // Pick whichever canvas is currently the visible source
-  const sourceCanvas = (palette.length >= 2 && viz.vizClosest)
-    ? viz.vizClosest.canvas
-    : viz.vizRaw.canvas;
-
-  createImageBitmap(sourceCanvas, { resizeWidth: FAVICON_SIZE, resizeHeight: FAVICON_SIZE })
-    .then((bmp) => {
-      const offscreen = new OffscreenCanvas(FAVICON_SIZE, FAVICON_SIZE);
-      const ctx = offscreen.getContext('2d')!;
-      // WebGL readback is y-flipped — flip it when drawing to the favicon
-      ctx.translate(0, FAVICON_SIZE);
-      ctx.scale(1, -1);
-      ctx.drawImage(bmp, 0, 0);
-      bmp.close();
-      return offscreen.convertToBlob({ type: 'image/png' });
-    })
-    .then((blob) => {
-      const url = URL.createObjectURL(blob);
-      const prev = $favicon.href;
-      $favicon.href = url;
-      // Revoke the previous blob URL to avoid memory leaks
-      if (prev.startsWith('blob:')) URL.revokeObjectURL(prev);
-    })
-    .catch(() => { /* silently ignore — favicon is non-critical */ });
+  _schedFavicon(() => (palette.length >= 2 && viz.vizClosest) ? viz.vizClosest! : viz.vizRaw);
 }
 
 // ── Refresh helpers ──────────────────────────────────────────────────────────
