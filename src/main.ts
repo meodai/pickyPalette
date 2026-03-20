@@ -37,6 +37,9 @@ const $paste = $<HTMLTextAreaElement>("[data-paste]");
 const $settingsToggle = $<HTMLInputElement>("[data-settings-toggle]");
 $settingsToggle.addEventListener("change", () => {
   $tools.classList.toggle("is-open", $settingsToggle.checked);
+  if ($settingsToggle.checked) {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
 });
 
 // ── Import / Export toggle ───────────────────────────────────────────────────

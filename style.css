@@ -194,7 +194,6 @@ kbd {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.4rem 0.75rem;
   border-bottom: var(--s-line) solid var(--c-surface-on);
 }
 
@@ -202,6 +201,7 @@ kbd {
   font-size: 0.75em;
   font-weight: 400;
   letter-spacing: 0.02em;
+  padding: 0.4rem 0.75rem;
 }
 
 .picker__settings-toggle {
@@ -211,6 +211,9 @@ kbd {
   cursor: pointer;
   font-size: 0.75em;
   letter-spacing: 0.02em;
+  border-left: var(--s-line) solid var(--c-surface-on);
+  padding: 0.4rem 0.75rem;
+  align-self: stretch;
 }
 
 /* ── Tools (settings body) ─────────────────────────────────────────────── */
