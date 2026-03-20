@@ -461,7 +461,6 @@ input[type="range"]::-moz-range-thumb {
 .picker__swatch:hover {
   flex: 3 1 0;
   z-index: 1;
-  border-color: var(--c-surface-on);
 }
 
 .picker__swatch.is-selected {
@@ -472,15 +471,26 @@ input[type="range"]::-moz-range-thumb {
 
 .picker__swatch__remove {
   position: absolute;
-  inset: 0;
+  width: 2em;
+  top: 0;
+  bottom: 0;
+  right: 0;
   border: none;
-  background: color-mix(in lab, var(--c-surface-on) 60%, transparent);
   color: var(--c-surface);
   cursor: pointer;
   font-size: 0.85rem;
   font-family: inherit;
   opacity: 0;
   transition: opacity 0.1s;
+  background: #fff;
+  &::after {
+    content: "×";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    margin-top: -0.05ex;
+  }
 }
 
 .picker__swatch:hover .picker__swatch__remove {

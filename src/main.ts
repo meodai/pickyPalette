@@ -293,7 +293,6 @@ function renderSwatches(): void {
 
     const $rm = document.createElement("button");
     $rm.className = "picker__swatch__remove";
-    $rm.textContent = "\u00d7";
     $rm.addEventListener("click", (e) => {
       e.stopPropagation();
       removeColor(srcIndex);
