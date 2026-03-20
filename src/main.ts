@@ -730,6 +730,7 @@ let probeEvent: PointerEvent | null = null;
 
 function hideProbe(): void {
   $probe.classList.remove("is-visible");
+  viz.hideHighlight();
 }
 
 function updateProbe(): void {
@@ -752,6 +753,18 @@ function updateProbe(): void {
   $probe.style.left = `${probeEvent.clientX + 14}px`;
   $probe.style.top = `${probeEvent.clientY + 14}px`;
   $probe.classList.add("is-visible");
+
+  // Highlight the region under the cursor
+  if (!showRaw && closestColor) {
+    const idx = findPaletteIndex(closestColor);
+    if (idx >= 0) {
+      viz.highlightRegion(palette[idx]);
+    } else {
+      viz.hideHighlight();
+    }
+  } else {
+    viz.hideHighlight();
+  }
 }
 
 // ── Keyboard shortcuts ───────────────────────────────────────────────────────
