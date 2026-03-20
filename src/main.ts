@@ -331,6 +331,7 @@ function undo(): void {
 
 function addColor(hex: string): void {
   if (palette.length >= MAX_COLORS) return;
+  if (palette.includes(hex)) return;
   pushUndo();
   palette.push(hex);
   if (sortedPalette) sortedPalette = [...sortedPalette, hex];
