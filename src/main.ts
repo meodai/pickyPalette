@@ -370,6 +370,7 @@ function removeColor(index: number): void {
 }
 
 function setColorAt(index: number, hex: string): void {
+  if (palette[index] === hex) return;
   palette[index] = hex;
   sortedPalette = null;
   refresh();
