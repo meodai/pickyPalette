@@ -62,7 +62,15 @@ let palette: string[] = [];
 let selectedIndex = -1;
 let sortedPalette: string[] | null = null;
 let pickMode = false;
-const modifierKeys = { meta: false, ctrl: false };
+const modifierKeys = { meta: false, ctrl: false, alt: false, shift: false };
+let hoveredSwatch: { hex: string; index: number } | null = null;
+
+function syncModifiers(e: { metaKey: boolean; ctrlKey: boolean; altKey: boolean; shiftKey: boolean }): void {
+  modifierKeys.meta = e.metaKey;
+  modifierKeys.ctrl = e.ctrlKey;
+  modifierKeys.alt = e.altKey;
+  modifierKeys.shift = e.shiftKey;
+}
 
 function displayPalette(): string[] {
   return sortedPalette && sortedPalette.length === palette.length
@@ -149,9 +157,23 @@ function syncView(): void {
   viz.updateView(pickMode, palette.length > 0);
 }
 
+function updateSwatchHover(): void {
+  if (!hoveredSwatch || pointerState?.dragging || !viz.vizClosest) return;
+  const { hex, index } = hoveredSwatch;
+  if (modifierKeys.alt && modifierKeys.shift) {
+    viz.compositeMask(hex, "closest", "raw");
+  } else if (modifierKeys.alt) {
+    viz.compositeMask(hex, "raw", "closest");
+  } else {
+    viz.hideMask();
+    viz.highlightRegion(hex);
+  }
+}
+
 function stateDidChange(): void {
   updateCanvasCursor();
   updateProbe();
+  updateSwatchHover();
 }
 
 function refreshView(): void {
@@ -328,15 +350,12 @@ function renderSwatches(): void {
     $s.appendChild($rm);
 
     $s.addEventListener("click", () => selectColor(srcIndex));
-    $s.addEventListener("mouseenter", (e) => {
-      if (pointerState?.dragging || !viz.vizClosest) return;
-      if (e.shiftKey) {
-        viz.compositeMask(hex, "closest", "raw");
-      } else {
-        viz.highlightRegion(hex);
-      }
+    $s.addEventListener("mouseenter", () => {
+      hoveredSwatch = { hex, index: srcIndex };
+      updateSwatchHover();
     });
     $s.addEventListener("mouseleave", () => {
+      hoveredSwatch = null;
       viz.hideMask();
       viz.hideHighlight();
     });
@@ -500,9 +519,10 @@ function buildMask(colorIndex: number): void {
 
 let altMaskActive = false;
 let altMaskIndex = -1;
+let altMaskShift = false;
 
-function updateAltMask(altKey: boolean): void {
-  if (altKey) {
+function updateAltMask(): void {
+  if (modifierKeys.alt) {
     if (pointerState?.dragging && pointerState.dragIndex >= 0) {
       buildMask(pointerState.dragIndex);
       altMaskIndex = pointerState.dragIndex;
@@ -511,9 +531,14 @@ function updateAltMask(altKey: boolean): void {
     }
     if (probeEvent) {
       const idx = paletteIndexAtCursor(probeEvent);
-      if (idx >= 0 && idx !== altMaskIndex) {
-        buildMask(idx);
+      if (idx >= 0 && (idx !== altMaskIndex || modifierKeys.shift !== altMaskShift)) {
+        if (modifierKeys.shift) {
+          viz.compositeMask(palette[idx], "closest", "raw");
+        } else {
+          buildMask(idx);
+        }
         altMaskIndex = idx;
+        altMaskShift = modifierKeys.shift;
       }
       if (idx >= 0) {
         altMaskActive = true;
@@ -521,10 +546,11 @@ function updateAltMask(altKey: boolean): void {
       }
     }
   }
-  if (!altKey && altMaskActive) {
+  if (!modifierKeys.alt && altMaskActive) {
     viz.hideMask();
     altMaskActive = false;
     altMaskIndex = -1;
+    altMaskShift = false;
   }
 }
 
@@ -605,11 +631,10 @@ function updateCanvasCursor(): void {
 
 $canvasWrap.addEventListener("pointermove", (e) => {
   probeEvent = e;
-  modifierKeys.meta = e.metaKey;
-  modifierKeys.ctrl = e.ctrlKey;
+  syncModifiers(e);
   updateCanvasCursor();
   if (probeRAF === null) probeRAF = requestAnimationFrame(updateProbe);
-  updateAltMask(e.altKey);
+  updateAltMask();
 
   if (!pointerState || pointerState.id !== e.pointerId) return;
   const dx = e.clientX - pointerState.x;
@@ -671,7 +696,7 @@ $canvasWrap.addEventListener("pointerup", (e) => {
       setColorAt(dragIndex, getRawHexAtUV(fu, fv));
     if (pickMode) setPickMode(false);
     altMaskIndex = -1;
-    updateAltMask(e.altKey);
+    updateAltMask();
     stateDidChange();
     return;
   }
@@ -822,11 +847,10 @@ function isTextInput(e: KeyboardEvent): boolean {
 }
 
 document.addEventListener("keydown", (e) => {
-  modifierKeys.meta = e.metaKey;
-  modifierKeys.ctrl = e.ctrlKey;
+  syncModifiers(e);
   stateDidChange();
-  if (e.key === "Alt") {
-    updateAltMask(true);
+  if (e.key === "Alt" || (e.key === "Shift" && modifierKeys.alt)) {
+    updateAltMask();
     return;
   }
   if (isTextInput(e)) return;
@@ -862,10 +886,9 @@ document.addEventListener("keydown", (e) => {
 });
 
 document.addEventListener("keyup", (e) => {
-  modifierKeys.meta = e.metaKey;
-  modifierKeys.ctrl = e.ctrlKey;
+  syncModifiers(e);
   stateDidChange();
-  if (e.key === "Alt") updateAltMask(false);
+  if (e.key === "Alt" || (e.key === "Shift" && modifierKeys.alt)) updateAltMask();
 });
 
 // ── Control event wiring ─────────────────────────────────────────────────────
