@@ -844,9 +844,9 @@ input[type='range']::-moz-range-thumb {
   top: 0;
   z-index: 1000;
   display: none;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.35rem 0.5rem;
+  align-items: stretch;
+  gap: 0;
+  padding: 0;
   border: var(--s-line) solid var(--c-surface-on);
   background: color-mix(in lab, var(--c-surface) 85%, transparent);
   color: var(--c-surface-on);
@@ -860,13 +860,14 @@ input[type='range']::-moz-range-thumb {
 }
 
 .cursor-probe__dot {
-  width: 0.8rem;
-  height: 0.8rem;
-  border-radius: 50%;
-  border: var(--s-line) solid var(--c-surface-on);
+  width: 1.75rem;
+  align-self: stretch;
   flex: 0 0 auto;
 }
 
 .cursor-probe__label {
   font-size: 0.7em;
+  padding: 0.35rem 0.5rem;
+  display: flex;
+  align-items: center;
 }
