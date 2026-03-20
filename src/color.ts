@@ -183,35 +183,6 @@ export function computeSliderStops(colorModel: string, axis: Axis): string[] {
   return stops;
 }
 
-/**
- * Extract the slider-axis value (normalized 0–1) from a hex color
- * given the current color model and axis.
- */
-export function getSliderValue(
-  hex: string,
-  colorModel: string,
-  axis: Axis,
-): number | null {
-  const culoriMode = SLIDER_CULORI_MODE[colorModel];
-  if (!culoriMode) return null;
-  const comps = SLIDER_COMPONENTS[culoriMode];
-  const ranges = SLIDER_RANGES[culoriMode];
-  if (!comps || !ranges) return null;
-
-  const axisIdx = AXES.indexOf(axis);
-  const sliderComp = comps[axisIdx];
-  const range = ranges[sliderComp];
-  if (!range) return null;
-
-  const convert = converter(culoriMode as any);
-  const color = convert(hex) as Record<string, any> | undefined;
-  if (!color) return null;
-
-  const val = color[sliderComp] ?? 0;
-  const [min, max] = range;
-  return Math.max(0, Math.min(1, (val - min) / (max - min)));
-}
-
 export function isHueAxis(colorModel: string, axis: Axis): boolean {
   const names = AXIS_NAMES[colorModel] || ["X", "Y", "Z"];
   const axisIdx = AXES.indexOf(axis);
