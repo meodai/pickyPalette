@@ -627,10 +627,11 @@ $canvasWrap.addEventListener("pointermove", (e) => {
 
   if (pointerState.dragging && pointerState.dragIndex >= 0) {
     const { u, v, inBounds } = getUV(e);
-    const [lu, lv] = pointerState.moving
-      ? clampUV(u - pointerState.offsetU, v - pointerState.offsetV)
-      : [u, v];
-    if (inBounds) {
+    const [lu, lv] = clampUV(
+      pointerState.moving ? u - pointerState.offsetU : u,
+      pointerState.moving ? v - pointerState.offsetV : v,
+    );
+    if (inBounds || pointerState.moving) {
       liveUpdateColor(pointerState.dragIndex, getRawHexAtUV(lu, lv));
       if (!pointerState.moving && dragMaskRAF === null) {
         const idx = pointerState.dragIndex;
@@ -660,8 +661,9 @@ $canvasWrap.addEventListener("pointerup", (e) => {
   if (wasDragging) {
     viz.hideMask();
     const { u, v, inBounds } = getUV(e);
-    const [fu, fv] = wasMoving ? clampUV(u - oU, v - oV) : [u, v];
-    if (inBounds && dragIndex >= 0) setColorAt(dragIndex, getRawHexAtUV(fu, fv));
+    const [fu, fv] = clampUV(wasMoving ? u - oU : u, wasMoving ? v - oV : v);
+    if ((inBounds || wasMoving) && dragIndex >= 0)
+      setColorAt(dragIndex, getRawHexAtUV(fu, fv));
     if (pickMode) setPickMode(false);
     altMaskIndex = -1;
     updateAltMask(e.altKey);
