@@ -400,8 +400,42 @@ let pointerState: {
   dragging: boolean;
   dragIndex: number;
   moving: boolean;
+  offsetU: number;
+  offsetV: number;
 } | null = null;
 let dragMaskRAF: number | null = null;
+
+/** Find the UV on the raw canvas that best matches a given hex color. */
+function findColorUV(hex: string, nearU: number, nearV: number): [number, number] {
+  // Read entire raw canvas in one go
+  const canvas = viz.vizRaw.canvas;
+  const gl = canvas.getContext("webgl2")!;
+  const w = canvas.width, h = canvas.height;
+  const px = new Uint8Array(w * h * 4);
+  viz.getRawColorAtUV(0.5, 0.5); // force render
+  gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+  gl.readPixels(0, 0, w, h, gl.RGBA, gl.UNSIGNED_BYTE, px);
+
+  const target = hexToRGB(hex);
+  const tr = Math.round(target[0] * 255);
+  const tg = Math.round(target[1] * 255);
+  const tb = Math.round(target[2] * 255);
+
+  let bestU = nearU, bestV = nearV, bestDist = Infinity;
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      const i = (y * w + x) * 4;
+      const dr = px[i] - tr, dg = px[i + 1] - tg, db = px[i + 2] - tb;
+      const d = dr * dr + dg * dg + db * db;
+      if (d < bestDist) {
+        bestDist = d;
+        bestU = x / w;
+        bestV = y / h; // WebGL Y is already bottom-up, matching our V
+      }
+    }
+  }
+  return [bestU, bestV];
+}
 
 function getUV(e: PointerEvent | MouseEvent): {
   u: number;
@@ -551,13 +585,27 @@ $canvasWrap.addEventListener("pointerdown", (e) => {
     }
   }
 
+  // Compute offset for relative dragging
+  let offsetU = 0, offsetV = 0;
+  const isMoving = !adding && selectedIndex >= 0;
+  if (isMoving && !isDblClick) {
+    const rect = $canvasWrap.getBoundingClientRect();
+    const clickU = (e.clientX - rect.left) / rect.width;
+    const clickV = 1 - (e.clientY - rect.top) / rect.height;
+    const [colorU, colorV] = findColorUV(palette[selectedIndex], clickU, clickV);
+    offsetU = clickU - colorU;
+    offsetV = clickV - colorV;
+  }
+
   pointerState = {
     x: e.clientX,
     y: e.clientY,
     id: e.pointerId,
     dragging: isDblClick,
     dragIndex: isDblClick ? palette.length - 1 : adding ? -1 : selectedIndex,
-    moving: isDblClick || (!adding && selectedIndex >= 0),
+    moving: isDblClick || isMoving,
+    offsetU,
+    offsetV,
   };
   $canvasWrap.setPointerCapture(e.pointerId);
 });
@@ -604,8 +652,14 @@ $canvasWrap.addEventListener("pointermove", (e) => {
 
   if (pointerState.dragging && pointerState.dragIndex >= 0) {
     const { u, v, inBounds } = getUV(e);
+    // Apply offset for relative movement (only when moving, not adding)
+    const lu = pointerState.moving ? u - pointerState.offsetU : u;
+    const lv = pointerState.moving ? v - pointerState.offsetV : v;
     if (inBounds) {
-      liveUpdateColor(pointerState.dragIndex, getRawHexAtUV(u, v));
+      liveUpdateColor(
+        pointerState.dragIndex,
+        getRawHexAtUV(Math.max(0, Math.min(1, lu)), Math.max(0, Math.min(1, lv))),
+      );
       if (!pointerState.moving && dragMaskRAF === null) {
         const idx = pointerState.dragIndex;
         dragMaskRAF = requestAnimationFrame(() => {
@@ -622,6 +676,9 @@ $canvasWrap.addEventListener("pointerup", (e) => {
   const wasDragging = pointerState.dragging;
   const dragIndex = pointerState.dragIndex;
   const wasAdding = !pointerState.moving;
+  const wasMoving = pointerState.moving;
+  const oU = pointerState.offsetU;
+  const oV = pointerState.offsetV;
   pointerState = null;
   updateCanvasCursor();
   if (dragMaskRAF !== null) {
@@ -632,7 +689,9 @@ $canvasWrap.addEventListener("pointerup", (e) => {
   if (wasDragging) {
     viz.hideMask();
     const { u, v, inBounds } = getUV(e);
-    if (inBounds && dragIndex >= 0) setColorAt(dragIndex, getRawHexAtUV(u, v));
+    const fu = wasMoving ? Math.max(0, Math.min(1, u - oU)) : u;
+    const fv = wasMoving ? Math.max(0, Math.min(1, v - oV)) : v;
+    if (inBounds && dragIndex >= 0) setColorAt(dragIndex, getRawHexAtUV(fu, fv));
     if (pickMode) exitPickMode();
     updateProbe();
     return;
