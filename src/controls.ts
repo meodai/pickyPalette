@@ -105,7 +105,12 @@ export function createControls(
   $modelControls.appendChild($axisGroup);
   $modelRow.appendChild($modelSpan);
   $modelRow.appendChild($modelControls);
-  $tools.appendChild($modelRow);
+
+  // Inner wrapper for grid height animation
+  const $inner = document.createElement("div");
+  $inner.className = "picker__settings-inner";
+  $tools.appendChild($inner);
+  $inner.appendChild($modelRow);
 
   // ── Distance metric ────────────────────────────────────────────────
   const $distanceMetric = document.createElement("select");
@@ -127,14 +132,14 @@ export function createControls(
       <option value="rgb">RGB</option>
     </optgroup>
   `;
-  $tools.appendChild(labeled("Distance metric", $distanceMetric));
+  $inner.appendChild(labeled("Distance metric", $distanceMetric));
 
   // ── Toggle checkboxes ──────────────────────────────────────────────
   function checkbox(label: string, checked: boolean): HTMLInputElement {
     const $cb = document.createElement("input");
     $cb.type = "checkbox";
     $cb.checked = checked;
-    $tools.appendChild(labeled(label, $cb));
+    $inner.appendChild(labeled(label, $cb));
     return $cb;
   }
 

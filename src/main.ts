@@ -36,7 +36,7 @@ const $paste = $<HTMLTextAreaElement>("[data-paste]");
 
 const $settingsToggle = $<HTMLInputElement>("[data-settings-toggle]");
 $settingsToggle.addEventListener("change", () => {
-  $tools.hidden = !$settingsToggle.checked;
+  $tools.classList.toggle("is-open", $settingsToggle.checked);
 });
 
 // ── Import / Export toggle ───────────────────────────────────────────────────
@@ -45,11 +45,11 @@ const $ioToggle = $<HTMLInputElement>("[data-io-toggle]");
 const $ioBody = $<HTMLDivElement>("[data-io-body]");
 
 $ioToggle.addEventListener("change", () => {
-  $ioBody.hidden = !$ioToggle.checked;
+  $ioBody.classList.toggle("is-open", $ioToggle.checked);
 });
 function closeIO(): void {
   $ioToggle.checked = false;
-  $ioBody.hidden = true;
+  $ioBody.classList.remove("is-open");
 }
 
 // ── State ────────────────────────────────────────────────────────────────────
