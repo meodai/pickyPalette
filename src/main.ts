@@ -252,7 +252,13 @@ function setColorAt(index: number, hex: string): void {
 
 function selectColor(index: number): void {
   selectedIndex = index;
-  renderSwatches();
+  // Just toggle the class — no need to rebuild the DOM
+  $swatches.querySelectorAll(".picker__swatch").forEach((el) => {
+    el.classList.toggle(
+      "is-selected",
+      (el as HTMLElement).dataset.index === String(index),
+    );
+  });
   viz.updateView(pickMode, palette.length > 0);
 }
 

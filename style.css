@@ -490,6 +490,7 @@ input[type="range"]::-moz-range-thumb {
     left: 50%;
     transform: translate(-50%, -50%);
     margin-top: -0.05ex;
+    color: var(--c-surface-on);
   }
 }
 
