@@ -204,17 +204,50 @@
 
       <h2>Keys &amp; Shortcuts</h2>
       <table class="picker__keys">
-        <tr><td><kbd>C</kbd></td><td>Toggle pick mode (add color on next click)</td></tr>
-        <tr><td><kbd>Cmd</kbd> / <kbd>Ctrl</kbd> + click</td><td>Add a new color</td></tr>
-        <tr><td>Double-click</td><td>Add a new color (hold to drag-adjust)</td></tr>
-        <tr><td>Click</td><td>Select the closest color under cursor</td></tr>
-        <tr><td>Drag</td><td>Move the selected color</td></tr>
-        <tr><td><kbd>Cmd</kbd> / <kbd>Ctrl</kbd> + <kbd>Z</kbd></td><td>Undo</td></tr>
-        <tr><td><kbd>Delete</kbd> / <kbd>Backspace</kbd></td><td>Remove selected color</td></tr>
-        <tr><td><kbd>Escape</kbd></td><td>Cancel drag or exit pick mode</td></tr>
-        <tr><td><kbd>Alt</kbd> / <kbd>Option</kbd></td><td>Reveal raw color space under cursor region</td></tr>
-        <tr><td><kbd>Shift</kbd> + hover swatch</td><td>Isolate color on canvas</td></tr>
-        <tr><td>Scroll / two-finger swipe</td><td>Adjust position slider (3rd axis)</td></tr>
+        <tr>
+          <td><kbd>C</kbd></td>
+          <td>Toggle pick mode (add color on next click)</td>
+        </tr>
+        <tr>
+          <td><kbd>Cmd</kbd> / <kbd>Ctrl</kbd> + click</td>
+          <td>Add a new color</td>
+        </tr>
+        <tr>
+          <td>Double-click</td>
+          <td>Add a new color (hold to drag-adjust)</td>
+        </tr>
+        <tr>
+          <td>Click</td>
+          <td>Select the closest color under cursor</td>
+        </tr>
+        <tr>
+          <td>Drag</td>
+          <td>Move the selected color</td>
+        </tr>
+        <tr>
+          <td><kbd>Cmd</kbd> / <kbd>Ctrl</kbd> + <kbd>Z</kbd></td>
+          <td>Undo</td>
+        </tr>
+        <tr>
+          <td><kbd>Delete</kbd> / <kbd>Backspace</kbd></td>
+          <td>Remove selected color</td>
+        </tr>
+        <tr>
+          <td><kbd>Escape</kbd></td>
+          <td>Cancel drag or exit pick mode</td>
+        </tr>
+        <tr>
+          <td><kbd>Alt</kbd> / <kbd>Option</kbd></td>
+          <td>Reveal raw color space under cursor region</td>
+        </tr>
+        <tr>
+          <td><kbd>Shift</kbd> + hover swatch</td>
+          <td>Isolate color on canvas</td>
+        </tr>
+        <tr>
+          <td>Scroll / two-finger swipe</td>
+          <td>Adjust position slider (3rd axis)</td>
+        </tr>
       </table>
 
       <p class="picker__links">
@@ -271,32 +304,32 @@
       </label>
       <div class="picker__bottom" data-io-body>
         <div class="picker__bottom-inner">
-        <textarea
-          class="picker__paste"
-          data-paste
-          placeholder="Paste hex colors (comma or space separated)…"
-        ></textarea>
+          <textarea
+            class="picker__paste"
+            data-paste
+            placeholder="Paste hex colors (comma or space separated)…"
+          ></textarea>
 
-        <div class="picker__beam">
-          <span class="beam__label">&#x22B7; Token Beam</span>
-          <select class="beam__mode" data-beam-mode>
-            <option value="send" selected>Send</option>
-            <option value="receive">Receive</option>
-          </select>
-          <input
-            class="beam__token"
-            data-beam-token
-            type="text"
-            placeholder="Token (auto-generated)…"
-            spellcheck="false"
-            autocomplete="off"
-          />
-          <button class="beam__connect" data-beam-connect>Connect</button>
-          <button class="beam__copy" data-beam-copy title="Copy token">
-            Copy
-          </button>
-          <span class="beam__status" data-beam-status></span>
-        </div>
+          <div class="picker__beam">
+            <span class="beam__label">&#x22B7; Token Beam</span>
+            <select class="beam__mode" data-beam-mode>
+              <option value="send" selected>Send</option>
+              <option value="receive">Receive</option>
+            </select>
+            <input
+              class="beam__token"
+              data-beam-token
+              type="text"
+              placeholder="Token (auto-generated)…"
+              spellcheck="false"
+              autocomplete="off"
+            />
+            <button class="beam__connect" data-beam-connect>Connect</button>
+            <button class="beam__copy" data-beam-copy title="Copy token">
+              Copy
+            </button>
+            <span class="beam__status" data-beam-status></span>
+          </div>
         </div>
       </div>
     </div>

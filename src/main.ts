@@ -89,25 +89,24 @@ function flipSwatches(updateFn: () => void): void {
   updateFn();
 
   // FLIP: record new positions and animate
-  $swatches.querySelectorAll<HTMLElement>(".picker__swatch").forEach(($s, i) => {
-    const name = $s.style.viewTransitionName;
-    const oldRect = name ? oldRects.get(name) : undefined;
-    if (!oldRect) return;
-    const newRect = $s.getBoundingClientRect();
-    const dx = oldRect.left - newRect.left;
-    if (Math.abs(dx) < 1) return;
-    $s.animate(
-      [
-        { transform: `translateX(${dx}px)` },
-        { transform: "translateX(0)" },
-      ],
-      {
-        duration: 300,
-        easing: "cubic-bezier(0.3, 0.7, 0, 1)",
-        delay: i * Math.max(5, 150 / oldRects.size),
-      },
-    );
-  });
+  $swatches
+    .querySelectorAll<HTMLElement>(".picker__swatch")
+    .forEach(($s, i) => {
+      const name = $s.style.viewTransitionName;
+      const oldRect = name ? oldRects.get(name) : undefined;
+      if (!oldRect) return;
+      const newRect = $s.getBoundingClientRect();
+      const dx = oldRect.left - newRect.left;
+      if (Math.abs(dx) < 1) return;
+      $s.animate(
+        [{ transform: `translateX(${dx}px)` }, { transform: "translateX(0)" }],
+        {
+          duration: 300,
+          easing: "cubic-bezier(0.3, 0.7, 0, 1)",
+          delay: i * Math.max(5, 150 / oldRects.size),
+        },
+      );
+    });
 }
 
 const sort = createSortManager((sorted) => {
@@ -529,7 +528,7 @@ $canvasWrap.addEventListener("pointerdown", (e) => {
   lastClickY = e.clientY;
 
   const adding =
-    isDblClick || (e.metaKey || e.ctrlKey) || pickMode || palette.length === 0;
+    isDblClick || e.metaKey || e.ctrlKey || pickMode || palette.length === 0;
 
   if (isDblClick) {
     // Immediately add color at this position
@@ -766,7 +765,8 @@ document.addEventListener("keydown", (e) => {
     $canvasWrap.classList.add("is-crosshair");
   }
   const t = e.target;
-  if (t instanceof HTMLTextAreaElement || t instanceof HTMLSelectElement) return;
+  if (t instanceof HTMLTextAreaElement || t instanceof HTMLSelectElement)
+    return;
   if (
     t instanceof HTMLInputElement &&
     t.type !== "range" &&

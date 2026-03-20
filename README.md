@@ -24,14 +24,14 @@ A color picker that shows how much visual weight each color claims in your palet
 
 ## Settings
 
-| Setting | Description |
-|---------|-------------|
-| Color model | Color space used to render the canvas (OKHsl, OKLab, HSL, etc.) |
-| Distance metric | How "closeness" between colors is measured (OKLab, ΔE2000, RGB, etc.) |
-| Outline | Draws borders between palette regions |
-| Reveal Color Space While Picking | Shows raw color space in the selected region during drag |
-| Clip to sRGB | Hides out-of-gamut colors (only affects wide-gamut models) |
-| Auto-Sort Color Swatches | ML-trained sorting of swatches by visual similarity |
+| Setting                          | Description                                                           |
+| -------------------------------- | --------------------------------------------------------------------- |
+| Color model                      | Color space used to render the canvas (OKHsl, OKLab, HSL, etc.)       |
+| Distance metric                  | How "closeness" between colors is measured (OKLab, ΔE2000, RGB, etc.) |
+| Outline                          | Draws borders between palette regions                                 |
+| Reveal Color Space While Picking | Shows raw color space in the selected region during drag              |
+| Clip to sRGB                     | Hides out-of-gamut colors (only affects wide-gamut models)            |
+| Auto-Sort Color Swatches         | ML-trained sorting of swatches by visual similarity                   |
 
 ## Development
 
