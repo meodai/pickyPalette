@@ -429,7 +429,7 @@ input[type="range"]::-moz-range-thumb {
   position: relative;
   transition:
     flex 0.15s cubic-bezier(0.3, 0.7, 0, 1),
-    transform 0.1s ease;
+    transform 0.1s cubic-bezier(0.3, 0.7, 0, 1);
 }
 
 .picker__swatch:hover {
