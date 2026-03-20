@@ -440,7 +440,7 @@ function renderSwatches(): void {
         controls.$colorModel.value,
         controls.axis,
       );
-      if (sliderVal !== null) {
+      if (sliderVal !== null && sliderVal > 0.01 && sliderVal < 0.99) {
         controls.$posSlider.value = String(sliderVal);
         viz.setPosition(sliderVal);
         refreshView();
@@ -512,49 +512,8 @@ let pointerState: {
   dragging: boolean;
   dragIndex: number;
   moving: boolean;
-  offsetU: number;
-  offsetV: number;
 } | null = null;
 let dragMaskRAF: number | null = null;
-
-function findColorUV(
-  hex: string,
-  nearU: number,
-  nearV: number,
-): [number, number] {
-  const canvas = viz.vizRaw.canvas;
-  const gl = canvas.getContext("webgl2")!;
-  const w = canvas.width,
-    h = canvas.height;
-  const px = new Uint8Array(w * h * 4);
-  viz.getRawColorAtUV(0.5, 0.5);
-  gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-  gl.readPixels(0, 0, w, h, gl.RGBA, gl.UNSIGNED_BYTE, px);
-
-  const target = hexToRGB(hex);
-  const tr = Math.round(target[0] * 255);
-  const tg = Math.round(target[1] * 255);
-  const tb = Math.round(target[2] * 255);
-
-  let bestU = nearU,
-    bestV = nearV,
-    bestDist = Infinity;
-  for (let y = 0; y < h; y++) {
-    for (let x = 0; x < w; x++) {
-      const i = (y * w + x) * 4;
-      const dr = px[i] - tr,
-        dg = px[i + 1] - tg,
-        db = px[i + 2] - tb;
-      const d = dr * dr + dg * dg + db * db;
-      if (d < bestDist) {
-        bestDist = d;
-        bestU = x / w;
-        bestV = y / h;
-      }
-    }
-  }
-  return [bestU, bestV];
-}
 
 function getUV(e: { clientX: number; clientY: number }): {
   u: number;
@@ -569,10 +528,6 @@ function getUV(e: { clientX: number; clientY: number }): {
 
 function getRawHexAtUV(u: number, v: number): string {
   return rgbToHex(viz.getRawColorAtUV(u, v));
-}
-
-function clampUV(u: number, v: number): [number, number] {
-  return [Math.max(0, Math.min(1, u)), Math.max(0, Math.min(1, v))];
 }
 
 function paletteIndexAtCursor(e: { clientX: number; clientY: number }): number {
@@ -706,20 +661,7 @@ $canvasWrap.addEventListener("pointerdown", (e) => {
     if (idx >= 0) selectColor(idx);
   }
 
-  // Compute offset for relative dragging
-  let offsetU = 0,
-    offsetV = 0;
   const isMoving = !adding && selectedIndex >= 0;
-  if (isMoving && !isDblClick) {
-    const { u: clickU, v: clickV } = getUV(e);
-    const [colorU, colorV] = findColorUV(
-      palette[selectedIndex],
-      clickU,
-      clickV,
-    );
-    offsetU = clickU - colorU;
-    offsetV = clickV - colorV;
-  }
 
   pointerState = {
     x: e.clientX,
@@ -728,8 +670,6 @@ $canvasWrap.addEventListener("pointerdown", (e) => {
     dragging: isDblClick,
     dragIndex: isDblClick ? palette.length - 1 : adding ? -1 : selectedIndex,
     moving: isDblClick || isMoving,
-    offsetU,
-    offsetV,
   };
   $canvasWrap.setPointerCapture(e.pointerId);
 });
@@ -776,13 +716,8 @@ $canvasWrap.addEventListener("pointermove", (e) => {
 
   if (pointerState.dragging && pointerState.dragIndex >= 0) {
     const { u, v, inBounds } = getUV(e);
-    const useOffset = pointerState.moving && !e.altKey;
-    const [lu, lv] = clampUV(
-      useOffset ? u - pointerState.offsetU : u,
-      useOffset ? v - pointerState.offsetV : v,
-    );
     if (inBounds || pointerState.moving) {
-      liveUpdateColor(pointerState.dragIndex, getRawHexAtUV(lu, lv));
+      liveUpdateColor(pointerState.dragIndex, getRawHexAtUV(u, v));
       if (!pointerState.moving && dragMaskRAF === null) {
         const idx = pointerState.dragIndex;
         dragMaskRAF = requestAnimationFrame(() => {
@@ -799,8 +734,6 @@ $canvasWrap.addEventListener("pointerup", (e) => {
   const wasDragging = pointerState.dragging;
   const dragIndex = pointerState.dragIndex;
   const wasMoving = pointerState.moving;
-  const oU = pointerState.offsetU;
-  const oV = pointerState.offsetV;
   pointerState = null;
   if (dragMaskRAF !== null) {
     cancelAnimationFrame(dragMaskRAF);
@@ -810,9 +743,8 @@ $canvasWrap.addEventListener("pointerup", (e) => {
   if (wasDragging) {
     viz.hideMask();
     const { u, v, inBounds } = getUV(e);
-    const [fu, fv] = clampUV(wasMoving ? u - oU : u, wasMoving ? v - oV : v);
-    if ((inBounds || wasMoving) && dragIndex >= 0)
-      setColorAt(dragIndex, getRawHexAtUV(fu, fv));
+    if (inBounds && dragIndex >= 0)
+      setColorAt(dragIndex, getRawHexAtUV(u, v));
     if (pickMode) setPickMode(false);
     altMaskIndex = -1;
     updateAltMask();
