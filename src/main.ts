@@ -215,10 +215,11 @@ function addColor(hex: string): void {
   pushUndo();
   palette.push(hex);
   // Keep previous sort order with the new color appended at the end,
-  // so it appears at the end first, then animates into place via view transition.
+  // so it appears at the end first, then animates into place via FLIP.
   if (sortedPalette) sortedPalette = [...sortedPalette, hex];
   selectedIndex = palette.length - 1;
   refresh();
+  viz.highlightRegion(hex);
   requestAutoSort();
 }
 
@@ -369,7 +370,7 @@ function enterPickMode(): void {
   $addBtn.classList.add("is-picking");
   $addIcon.textContent = "\u00d7";
   $addLabel.innerHTML = "<kbd>C</kbd> Cancel pick";
-  $canvasWrap.classList.add("is-crosshair");
+  updateCanvasCursor();
   viz.updateView(pickMode, palette.length > 0);
 }
 
@@ -378,7 +379,7 @@ function exitPickMode(): void {
   $addBtn.classList.remove("is-picking");
   $addIcon.textContent = "+";
   $addLabel.innerHTML = "<kbd>C</kbd> Add color";
-  $canvasWrap.classList.remove("is-crosshair");
+  updateCanvasCursor();
   viz.updateView(pickMode, palette.length > 0);
 }
 
@@ -561,8 +562,21 @@ $canvasWrap.addEventListener("pointerdown", (e) => {
   $canvasWrap.setPointerCapture(e.pointerId);
 });
 
+function updateCanvasCursor(e?: { metaKey: boolean; ctrlKey: boolean }): void {
+  if (e) {
+    modifierKeys.meta = e.metaKey;
+    modifierKeys.ctrl = e.ctrlKey;
+  }
+  const adding =
+    modifierKeys.meta || modifierKeys.ctrl || pickMode || palette.length === 0;
+  const grabbing = pointerState?.dragging ?? false;
+  $canvasWrap.classList.toggle("is-crosshair", adding && !grabbing);
+  $canvasWrap.classList.toggle("is-grabbing", grabbing);
+}
+
 $canvasWrap.addEventListener("pointermove", (e) => {
   probeEvent = e;
+  updateCanvasCursor(e);
   if (probeRAF === null) probeRAF = requestAnimationFrame(updateProbe);
   updateAltMask(e.altKey);
 
@@ -572,7 +586,7 @@ $canvasWrap.addEventListener("pointermove", (e) => {
 
   if (!pointerState.dragging && Math.hypot(dx, dy) > DRAG_THRESHOLD) {
     pointerState.dragging = true;
-    $canvasWrap.classList.add("is-grabbing");
+    updateCanvasCursor(e);
 
     if (pointerState.moving && pointerState.dragIndex >= 0) {
       // Drag: edit selected color
@@ -609,7 +623,7 @@ $canvasWrap.addEventListener("pointerup", (e) => {
   const dragIndex = pointerState.dragIndex;
   const wasAdding = !pointerState.moving;
   pointerState = null;
-  $canvasWrap.classList.remove("is-grabbing");
+  updateCanvasCursor();
   if (dragMaskRAF !== null) {
     cancelAnimationFrame(dragMaskRAF);
     dragMaskRAF = null;
@@ -620,6 +634,7 @@ $canvasWrap.addEventListener("pointerup", (e) => {
     const { u, v, inBounds } = getUV(e);
     if (inBounds && dragIndex >= 0) setColorAt(dragIndex, getRawHexAtUV(u, v));
     if (pickMode) exitPickMode();
+    updateProbe();
     return;
   }
 
@@ -630,6 +645,7 @@ $canvasWrap.addEventListener("pointerup", (e) => {
   if (pickMode || wasAdding) {
     addColor(getRawHexAtUV(u, v));
     if (pickMode) exitPickMode();
+    updateProbe();
     return;
   }
 
@@ -641,11 +657,12 @@ $canvasWrap.addEventListener("pointerup", (e) => {
       if (matchIndex >= 0) selectColor(matchIndex);
     }
   }
+  updateProbe();
 });
 
 $canvasWrap.addEventListener("pointercancel", () => {
   pointerState = null;
-  $canvasWrap.classList.remove("is-grabbing");
+  updateCanvasCursor();
   if (dragMaskRAF !== null) {
     cancelAnimationFrame(dragMaskRAF);
     dragMaskRAF = null;
@@ -715,6 +732,8 @@ $canvasWrap.addEventListener("touchcancel", () => {
   touchState = null;
 });
 
+const modifierKeys = { meta: false, ctrl: false };
+
 // ── Cursor probe ─────────────────────────────────────────────────────────────
 
 const $probe = document.createElement("div");
@@ -754,8 +773,9 @@ function updateProbe(): void {
   $probe.style.top = `${probeEvent.clientY + 14}px`;
   $probe.classList.add("is-visible");
 
-  // Highlight the region under the cursor
-  if (!showRaw && closestColor) {
+  // Highlight the region under the cursor (not when adding via Cmd/Ctrl)
+  const adding = modifierKeys.meta || modifierKeys.ctrl || pickMode;
+  if (!showRaw && !adding && closestColor) {
     const idx = findPaletteIndex(closestColor);
     if (idx >= 0) {
       viz.highlightRegion(palette[idx]);
@@ -770,12 +790,11 @@ function updateProbe(): void {
 // ── Keyboard shortcuts ───────────────────────────────────────────────────────
 
 document.addEventListener("keydown", (e) => {
+  updateCanvasCursor(e);
+  updateProbe();
   if (e.key === "Alt") {
     updateAltMask(true);
     return;
-  }
-  if (e.key === "Meta" || e.key === "Control") {
-    $canvasWrap.classList.add("is-crosshair");
   }
   const t = e.target;
   if (t instanceof HTMLTextAreaElement || t instanceof HTMLSelectElement)
@@ -796,6 +815,23 @@ document.addEventListener("keydown", (e) => {
     togglePickMode();
   }
   if (e.key === "Delete" || e.key === "Backspace") {
+    // If hovering the canvas, remove the color under the cursor
+    if (probeEvent && viz.vizClosest) {
+      const rect = $canvasWrap.getBoundingClientRect();
+      const u = (probeEvent.clientX - rect.left) / rect.width;
+      const v = 1 - (probeEvent.clientY - rect.top) / rect.height;
+      if (u >= 0 && u <= 1 && v >= 0 && v <= 1) {
+        const cc = viz.getClosestColorAtUV(u, v);
+        if (cc) {
+          const idx = findPaletteIndex(cc);
+          if (idx >= 0) {
+            e.preventDefault();
+            removeColor(idx);
+            return;
+          }
+        }
+      }
+    }
     if (selectedIndex >= 0 && selectedIndex < palette.length) {
       e.preventDefault();
       removeColor(selectedIndex);
@@ -810,10 +846,9 @@ document.addEventListener("keydown", (e) => {
 });
 
 document.addEventListener("keyup", (e) => {
+  updateCanvasCursor(e);
+  updateProbe();
   if (e.key === "Alt") updateAltMask(false);
-  if (e.key === "Meta" || e.key === "Control") {
-    $canvasWrap.classList.remove("is-crosshair");
-  }
 });
 
 // ── Control event wiring ─────────────────────────────────────────────────────
