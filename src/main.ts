@@ -387,8 +387,17 @@ function getRawHexAtUV(u: number, v: number): string {
 }
 
 function liveUpdateColor(index: number, hex: string): void {
+  const oldHex = palette[index];
   palette[index] = hex;
-  viz.setColor(hexToRGB(hex), index);
+  // Find the display slot — the shader palette uses displayPalette() order
+  const dp = displayPalette();
+  let displayIdx = dp.indexOf(oldHex);
+  if (displayIdx < 0) displayIdx = index;
+  if (sortedPalette) {
+    const si = sortedPalette.indexOf(oldHex);
+    if (si >= 0) sortedPalette[si] = hex;
+  }
+  viz.setColor(hexToRGB(hex), displayIdx);
   const $s = $swatches.querySelector<HTMLElement>(`[data-index="${index}"]`);
   if ($s) $s.style.background = hex;
 }
