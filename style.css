@@ -150,6 +150,23 @@ kbd {
   border-top: var(--s-line) solid var(--c-border);
 }
 
+.picker__keys {
+  width: 100%;
+  font-size: 0.8em;
+  border-collapse: collapse;
+  margin: 0.5rem 0 1rem;
+}
+
+.picker__keys td {
+  padding: 0.3rem 0.75rem;
+  border-bottom: var(--s-line) solid var(--c-border);
+}
+
+.picker__keys td:first-child {
+  white-space: nowrap;
+  padding-left: 1.4rem;
+}
+
 .picker__about a:hover {
   text-decoration-thickness: 2px;
 }

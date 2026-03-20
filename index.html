@@ -82,9 +82,18 @@
       <details class="picker__manual">
         <summary>Adding Colors</summary>
         <p>
-          Click the canvas or press <kbd>C</kbd> to enter pick mode, then click
-          to place a color. You can also drag directly on the canvas to add a
-          color and adjust it in one motion.
+          Double-click the canvas, or hold <kbd>Cmd</kbd> / <kbd>Ctrl</kbd> and
+          click to add a new color. You can also press <kbd>C</kbd> to enter
+          pick mode, then click to place a color. Hold after double-clicking or
+          Cmd-clicking to drag and adjust the color before releasing.
+        </p>
+      </details>
+      <details class="picker__manual">
+        <summary>Selecting &amp; Editing Colors</summary>
+        <p>
+          Click a region on the canvas or a swatch to select a color. Drag on
+          the canvas to move the selected color to a new position. Press
+          <kbd>Escape</kbd> to cancel a drag and restore the original color.
         </p>
       </details>
       <details class="picker__manual">
@@ -96,21 +105,13 @@
         </p>
       </details>
       <details class="picker__manual">
-        <summary>Moving a Color</summary>
-        <p>
-          Hold <kbd>Shift</kbd> and drag on the canvas to move an existing
-          color. The color whose region you click in will be picked up and
-          repositioned as you drag. Press <kbd>Escape</kbd> to cancel and
-          restore the original color.
-        </p>
-      </details>
-      <details class="picker__manual">
         <summary>Inspecting a Color</summary>
         <p>
           Hold <kbd>Shift</kbd> and hover a swatch to isolate it on the canvas —
           only that color's region is shown, the rest reveals the raw color
-          space. This lets you see exactly how much territory a single color
-          claims.
+          space. Hold <kbd>Alt</kbd> / <kbd>Option</kbd> while hovering or
+          dragging on the canvas to reveal the raw color space under the color
+          region at the cursor.
         </p>
       </details>
       <details class="picker__manual">
@@ -118,7 +119,8 @@
         <p>
           Type or paste hex values into the text field at the bottom — comma or
           space separated (e.g. <code>#ff0000, #00ff00, #0000ff</code>). The
-          entire palette will be replaced with the pasted colors.
+          palette updates with all valid colors. Clearing the field removes all
+          colors.
         </p>
       </details>
       <details class="picker__manual">
@@ -199,6 +201,21 @@
           token from an external source to pull colors in.
         </p>
       </details>
+
+      <h2>Keys &amp; Shortcuts</h2>
+      <table class="picker__keys">
+        <tr><td><kbd>C</kbd></td><td>Toggle pick mode (add color on next click)</td></tr>
+        <tr><td><kbd>Cmd</kbd> / <kbd>Ctrl</kbd> + click</td><td>Add a new color</td></tr>
+        <tr><td>Double-click</td><td>Add a new color (hold to drag-adjust)</td></tr>
+        <tr><td>Click</td><td>Select the closest color under cursor</td></tr>
+        <tr><td>Drag</td><td>Move the selected color</td></tr>
+        <tr><td><kbd>Cmd</kbd> / <kbd>Ctrl</kbd> + <kbd>Z</kbd></td><td>Undo</td></tr>
+        <tr><td><kbd>Delete</kbd> / <kbd>Backspace</kbd></td><td>Remove selected color</td></tr>
+        <tr><td><kbd>Escape</kbd></td><td>Cancel drag or exit pick mode</td></tr>
+        <tr><td><kbd>Alt</kbd> / <kbd>Option</kbd></td><td>Reveal raw color space under cursor region</td></tr>
+        <tr><td><kbd>Shift</kbd> + hover swatch</td><td>Isolate color on canvas</td></tr>
+        <tr><td>Scroll / two-finger swipe</td><td>Adjust position slider (3rd axis)</td></tr>
+      </table>
 
       <p class="picker__links">
         Built with
