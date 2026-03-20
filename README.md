@@ -8,19 +8,19 @@ The canvas maps a color space onto a plane — as you add colors, it splits into
 
 ## Interaction
 
-| Input | Action |
-| --- | --- |
-| Click | Select the closest color under cursor |
-| Drag | Move the selected color |
-| <kbd>Cmd</kbd> / <kbd>Ctrl</kbd> + click | Add a new color |
-| Double-click | Add a new color (hold to drag-adjust) |
-| <kbd>C</kbd> | Toggle pick mode (next click adds) |
-| <kbd>Cmd</kbd> / <kbd>Ctrl</kbd> + <kbd>Z</kbd> | Undo |
-| <kbd>Delete</kbd> / <kbd>Backspace</kbd> | Remove color under cursor or selected color |
-| <kbd>Esc</kbd> | Cancel drag or exit pick mode |
-| <kbd>Alt</kbd> / <kbd>Option</kbd> | Reveal raw color space under hovered region |
+| Input                                                 | Action                                            |
+| ----------------------------------------------------- | ------------------------------------------------- |
+| Click                                                 | Select the closest color under cursor             |
+| Drag                                                  | Move the selected color                           |
+| <kbd>Cmd</kbd> / <kbd>Ctrl</kbd> + click              | Add a new color                                   |
+| Double-click                                          | Add a new color (hold to drag-adjust)             |
+| <kbd>C</kbd>                                          | Toggle pick mode (next click adds)                |
+| <kbd>Cmd</kbd> / <kbd>Ctrl</kbd> + <kbd>Z</kbd>       | Undo                                              |
+| <kbd>Delete</kbd> / <kbd>Backspace</kbd>              | Remove color under cursor or selected color       |
+| <kbd>Esc</kbd>                                        | Cancel drag or exit pick mode                     |
+| <kbd>Alt</kbd> / <kbd>Option</kbd>                    | Reveal raw color space under hovered region       |
 | <kbd>Shift</kbd> + <kbd>Alt</kbd> / <kbd>Option</kbd> | Isolate color (flat region stays, rest shows raw) |
-| Scroll / two-finger swipe | Adjust position slider (3rd axis) |
+| Scroll / two-finger swipe                             | Adjust position slider (3rd axis)                 |
 
 - Dragging moves the color relative to its position (no snapping to cursor).
 - An empty canvas treats any click/drag as adding a color.
@@ -40,14 +40,14 @@ The canvas maps a color space onto a plane — as you add colors, it splits into
 
 ## Settings
 
-| Setting | Description |
-| --- | --- |
-| Color model | Color space used to render the canvas (OKHsl, OKLab, HSL, etc.) |
-| Distance metric | How "closeness" between colors is measured (OKLab, ΔE2000, RGB, etc.) |
-| Outline | Draws borders between palette regions |
-| Reveal Color Space While Picking | Shows raw color space in the new color's region during Cmd+drag |
-| Clip to sRGB | Hides out-of-gamut colors (only affects wide-gamut models) |
-| Auto-Sort Color Swatches | ML-trained sorting of swatches by visual similarity |
+| Setting                          | Description                                                           |
+| -------------------------------- | --------------------------------------------------------------------- |
+| Color model                      | Color space used to render the canvas (OKHsl, OKLab, HSL, etc.)       |
+| Distance metric                  | How "closeness" between colors is measured (OKLab, ΔE2000, RGB, etc.) |
+| Outline                          | Draws borders between palette regions                                 |
+| Reveal Color Space While Picking | Shows raw color space in the new color's region during Cmd+drag       |
+| Clip to sRGB                     | Hides out-of-gamut colors (only affects wide-gamut models)            |
+| Auto-Sort Color Swatches         | ML-trained sorting of swatches by visual similarity                   |
 
 ## Development
 

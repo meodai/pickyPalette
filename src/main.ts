@@ -823,7 +823,10 @@ $canvasWrap.addEventListener("pointercancel", () => {
   viz.hideMask();
 });
 
-$canvasWrap.addEventListener("pointerleave", () => hideProbe());
+$canvasWrap.addEventListener("pointerleave", () => {
+  probeEvent = null;
+  hideProbe();
+});
 
 // ── Scroll / touch → adjust position ─────────────────────────────────────────
 
