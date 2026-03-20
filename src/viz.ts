@@ -1,4 +1,5 @@
 import { PaletteViz } from "palette-shader";
+import { wcagContrast } from "culori";
 import type { RGB, Axis } from "./types";
 import { hexToRGB } from "./color";
 
@@ -79,7 +80,7 @@ export function createVizManager($canvasWrap: HTMLElement): VizManager {
 
   function ensureVizClosest(vizPalette: RGB[]): PaletteViz | null {
     if (vizClosest) return vizClosest;
-    if (vizPalette.length < 2) return null;
+    if (vizPalette.length < 1) return null;
     const w = Math.round($canvasWrap.clientWidth) || 500;
     vizClosest = new PaletteViz({
       width: w,
@@ -101,7 +102,7 @@ export function createVizManager($canvasWrap: HTMLElement): VizManager {
 
   function syncPalette(vizPalette: RGB[]): void {
     vizRaw.palette = vizPalette.length > 0 ? vizPalette : DUMMY_PALETTE;
-    if (vizPalette.length >= 2) {
+    if (vizPalette.length >= 1) {
       ensureVizClosest(vizPalette);
       if (vizClosest) vizClosest.palette = vizPalette;
     } else if (vizClosest) {
@@ -238,9 +239,10 @@ export function createVizManager($canvasWrap: HTMLElement): VizManager {
     highlightCtx.putImageData(imageData, 0, 0);
 
     // Composite: draw drop-shadow outlines, then clear the filled region
-    const s = matchMedia("(prefers-color-scheme: dark)").matches
-      ? "black"
-      : "white";
+    const s =
+      wcagContrast(hex, "white") > wcagContrast(hex, "black")
+        ? "white"
+        : "black";
     const d = 2;
     highlightCtx.filter =
       `drop-shadow(${d}px 0 0 ${s}) drop-shadow(-${d}px 0 0 ${s}) ` +

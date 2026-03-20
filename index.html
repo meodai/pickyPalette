@@ -78,39 +78,89 @@
         shift in real time.
       </p>
 
+      <h2>Keys &amp; Shortcuts</h2>
+      <table class="picker__keys">
+        <tr>
+          <td><kbd>C</kbd></td>
+          <td>Toggle pick mode (add color on next click)</td>
+        </tr>
+        <tr>
+          <td><kbd>Cmd</kbd> / <kbd>Ctrl</kbd> + click</td>
+          <td>Add a new color</td>
+        </tr>
+        <tr>
+          <td>Double-click</td>
+          <td>Add a new color (hold to drag-adjust)</td>
+        </tr>
+        <tr>
+          <td>Click</td>
+          <td>Select the closest color under cursor</td>
+        </tr>
+        <tr>
+          <td>Drag</td>
+          <td>Move the selected color</td>
+        </tr>
+        <tr>
+          <td><kbd>Cmd</kbd> / <kbd>Ctrl</kbd> + <kbd>Z</kbd></td>
+          <td>Undo</td>
+        </tr>
+        <tr>
+          <td><kbd>Delete</kbd> / <kbd>Backspace</kbd></td>
+          <td>Remove color under cursor (canvas) or selected color</td>
+        </tr>
+        <tr>
+          <td><kbd>Esc</kbd></td>
+          <td>Cancel drag or exit pick mode</td>
+        </tr>
+        <tr>
+          <td><kbd>Alt</kbd> / <kbd>Option</kbd></td>
+          <td>Reveal raw color space under hovered region</td>
+        </tr>
+        <tr>
+          <td><kbd>Shift</kbd> + <kbd>Alt</kbd> / <kbd>Option</kbd></td>
+          <td>Isolate color (flat region stays, rest shows raw)</td>
+        </tr>
+        <tr>
+          <td>Scroll / two-finger swipe</td>
+          <td>Adjust position slider (3rd axis)</td>
+        </tr>
+      </table>
+
       <h2>User Manual / Glossary</h2>
       <details class="picker__manual">
         <summary>Adding Colors</summary>
         <p>
-          Click the canvas or press <kbd>C</kbd> to enter pick mode, then click
-          to place a color. You can also drag directly on the canvas to add a
-          color and adjust it in one motion.
+          Double-click the canvas, or hold <kbd>Cmd</kbd> / <kbd>Ctrl</kbd> and
+          click to add a new color. You can also press <kbd>C</kbd> to enter
+          pick mode, then click to place a color. Hold after double-clicking or
+          Cmd-clicking to drag and adjust the color before releasing.
+        </p>
+      </details>
+      <details class="picker__manual">
+        <summary>Selecting &amp; Editing Colors</summary>
+        <p>
+          Click a region on the canvas or a swatch to select a color. Drag on
+          the canvas to move the selected color to a new position. Press
+          <kbd>Esc</kbd> to cancel a drag and restore the original color.
         </p>
       </details>
       <details class="picker__manual">
         <summary>Removing Colors</summary>
         <p>
-          Hover a swatch and click the <kbd>&times;</kbd> button. You can also
-          select a swatch by clicking it, then press <kbd>Delete</kbd> or
-          <kbd>Backspace</kbd>.
-        </p>
-      </details>
-      <details class="picker__manual">
-        <summary>Moving a Color</summary>
-        <p>
-          Hold <kbd>Shift</kbd> and drag on the canvas to move an existing
-          color. The color whose region you click in will be picked up and
-          repositioned as you drag. Press <kbd>Escape</kbd> to cancel and
-          restore the original color.
+          Hover a swatch and click the <kbd>&times;</kbd> button, or press
+          <kbd>Delete</kbd> / <kbd>Backspace</kbd> — this removes the color
+          under the cursor when hovering the canvas, or the selected color
+          otherwise.
         </p>
       </details>
       <details class="picker__manual">
         <summary>Inspecting a Color</summary>
         <p>
-          Hold <kbd>Shift</kbd> and hover a swatch to isolate it on the canvas —
-          only that color's region is shown, the rest reveals the raw color
-          space. This lets you see exactly how much territory a single color
-          claims.
+          Hold <kbd>Alt</kbd> / <kbd>Option</kbd> while hovering the canvas or
+          a swatch to reveal the raw color space under that color's region.
+          Add <kbd>Shift</kbd> to invert — isolate the color so only its region
+          stays flat while the rest reveals the raw color space.
+          Both work while dragging too.
         </p>
       </details>
       <details class="picker__manual">
@@ -118,7 +168,8 @@
         <p>
           Type or paste hex values into the text field at the bottom — comma or
           space separated (e.g. <code>#ff0000, #00ff00, #0000ff</code>). The
-          entire palette will be replaced with the pasted colors.
+          palette updates with all valid colors. Clearing the field removes all
+          colors.
         </p>
       </details>
       <details class="picker__manual">
@@ -156,8 +207,10 @@
       <details class="picker__manual">
         <summary>Reveal Color Space While Picking</summary>
         <p>
-          When dragging to pick a color, the selected color's region shows the
-          raw color space underneath instead of the flat palette color.
+          When adding a new color via <kbd>Cmd</kbd> / <kbd>Ctrl</kbd> + drag,
+          the new color's region reveals the raw color space underneath instead
+          of the flat palette color, so you can see exactly where you're placing
+          it.
         </p>
       </details>
       <details class="picker__manual">
@@ -254,32 +307,32 @@
       </label>
       <div class="picker__bottom" data-io-body>
         <div class="picker__bottom-inner">
-        <textarea
-          class="picker__paste"
-          data-paste
-          placeholder="Paste hex colors (comma or space separated)…"
-        ></textarea>
+          <textarea
+            class="picker__paste"
+            data-paste
+            placeholder="Paste hex colors (comma or space separated)…"
+          ></textarea>
 
-        <div class="picker__beam">
-          <span class="beam__label">&#x22B7; Token Beam</span>
-          <select class="beam__mode" data-beam-mode>
-            <option value="send" selected>Send</option>
-            <option value="receive">Receive</option>
-          </select>
-          <input
-            class="beam__token"
-            data-beam-token
-            type="text"
-            placeholder="Token (auto-generated)…"
-            spellcheck="false"
-            autocomplete="off"
-          />
-          <button class="beam__connect" data-beam-connect>Connect</button>
-          <button class="beam__copy" data-beam-copy title="Copy token">
-            Copy
-          </button>
-          <span class="beam__status" data-beam-status></span>
-        </div>
+          <div class="picker__beam">
+            <span class="beam__label">&#x22B7; Token Beam</span>
+            <select class="beam__mode" data-beam-mode>
+              <option value="send" selected>Send</option>
+              <option value="receive">Receive</option>
+            </select>
+            <input
+              class="beam__token"
+              data-beam-token
+              type="text"
+              placeholder="Token (auto-generated)…"
+              spellcheck="false"
+              autocomplete="off"
+            />
+            <button class="beam__connect" data-beam-connect>Connect</button>
+            <button class="beam__copy" data-beam-copy title="Copy token">
+              Copy
+            </button>
+            <span class="beam__status" data-beam-status></span>
+          </div>
         </div>
       </div>
     </div>
