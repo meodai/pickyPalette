@@ -642,7 +642,9 @@ function updateProbe(): void {
     return;
   }
 
-  const color = viz.getRawColorAtUV(u, v);
+  const showRaw = pickMode || (pointerState?.dragging ?? false);
+  const closestColor = !showRaw ? viz.getClosestColorAtUV(u, v) : null;
+  const color = closestColor ?? viz.getRawColorAtUV(u, v);
   const hex = rgbToHex(color);
   $probeDot.style.background = hex;
   $probeLabel.textContent = hex;
@@ -657,7 +659,8 @@ document.addEventListener("keydown", (e) => {
   if (
     e.target instanceof HTMLInputElement ||
     e.target instanceof HTMLSelectElement ||
-    e.target instanceof HTMLTextAreaElement
+    e.target instanceof HTMLTextAreaElement ||
+    e.target instanceof HTMLButtonElement
   )
     return;
   if ((e.metaKey || e.ctrlKey) && e.key === "z") {
