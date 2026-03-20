@@ -79,7 +79,7 @@ export function createVizManager($canvasWrap: HTMLElement): VizManager {
 
   function ensureVizClosest(vizPalette: RGB[]): PaletteViz | null {
     if (vizClosest) return vizClosest;
-    if (vizPalette.length < 2) return null;
+    if (vizPalette.length < 1) return null;
     const w = Math.round($canvasWrap.clientWidth) || 500;
     vizClosest = new PaletteViz({
       width: w,
@@ -101,7 +101,7 @@ export function createVizManager($canvasWrap: HTMLElement): VizManager {
 
   function syncPalette(vizPalette: RGB[]): void {
     vizRaw.palette = vizPalette.length > 0 ? vizPalette : DUMMY_PALETTE;
-    if (vizPalette.length >= 2) {
+    if (vizPalette.length >= 1) {
       ensureVizClosest(vizPalette);
       if (vizClosest) vizClosest.palette = vizPalette;
     } else if (vizClosest) {

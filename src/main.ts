@@ -141,7 +141,7 @@ const beam = createBeamManager(
 
 function scheduleFaviconUpdate(): void {
   _schedFavicon(() =>
-    palette.length >= 2 && viz.vizClosest ? viz.vizClosest! : viz.vizRaw,
+    palette.length >= 1 && viz.vizClosest ? viz.vizClosest! : viz.vizRaw,
   );
 }
 
@@ -287,6 +287,7 @@ function setPalette(colors: string[]): void {
 
 function renderSwatches(): void {
   while ($swatches.firstChild !== $addBtn) $swatches.firstChild!.remove();
+  $canvasWrap.classList.toggle("is-empty", palette.length === 0);
 
   const dp = displayPalette();
   const usedSrcIndices = new Set<number>();
@@ -369,6 +370,7 @@ function enterPickMode(): void {
   $addBtn.classList.add("is-picking");
   $addIcon.textContent = "\u00d7";
   $addLabel.innerHTML = "<kbd>C</kbd> Cancel pick";
+  $canvasWrap.classList.add("is-crosshair");
   viz.updateView(pickMode, palette.length > 0);
 }
 
@@ -377,6 +379,7 @@ function exitPickMode(): void {
   $addBtn.classList.remove("is-picking");
   $addIcon.textContent = "+";
   $addLabel.innerHTML = "<kbd>C</kbd> Add color";
+  $canvasWrap.classList.remove("is-crosshair");
   viz.updateView(pickMode, palette.length > 0);
 }
 
@@ -536,6 +539,18 @@ $canvasWrap.addEventListener("pointerdown", (e) => {
     }
   }
 
+  // Select the color under the cursor before setting up the drag
+  if (!adding && !isDblClick && viz.vizClosest) {
+    const { u, v, inBounds } = getUV(e);
+    if (inBounds) {
+      const closestColor = viz.getClosestColorAtUV(u, v);
+      if (closestColor) {
+        const idx = findPaletteIndex(closestColor);
+        if (idx >= 0) selectColor(idx);
+      }
+    }
+  }
+
   pointerState = {
     x: e.clientX,
     y: e.clientY,
@@ -558,6 +573,7 @@ $canvasWrap.addEventListener("pointermove", (e) => {
 
   if (!pointerState.dragging && Math.hypot(dx, dy) > DRAG_THRESHOLD) {
     pointerState.dragging = true;
+    $canvasWrap.classList.add("is-grabbing");
 
     if (pointerState.moving && pointerState.dragIndex >= 0) {
       // Drag: edit selected color
@@ -594,6 +610,7 @@ $canvasWrap.addEventListener("pointerup", (e) => {
   const dragIndex = pointerState.dragIndex;
   const wasAdding = !pointerState.moving;
   pointerState = null;
+  $canvasWrap.classList.remove("is-grabbing");
   if (dragMaskRAF !== null) {
     cancelAnimationFrame(dragMaskRAF);
     dragMaskRAF = null;
@@ -629,6 +646,7 @@ $canvasWrap.addEventListener("pointerup", (e) => {
 
 $canvasWrap.addEventListener("pointercancel", () => {
   pointerState = null;
+  $canvasWrap.classList.remove("is-grabbing");
   if (dragMaskRAF !== null) {
     cancelAnimationFrame(dragMaskRAF);
     dragMaskRAF = null;
@@ -744,6 +762,9 @@ document.addEventListener("keydown", (e) => {
     updateAltMask(true);
     return;
   }
+  if (e.key === "Meta" || e.key === "Control") {
+    $canvasWrap.classList.add("is-crosshair");
+  }
   const t = e.target;
   if (t instanceof HTMLTextAreaElement || t instanceof HTMLSelectElement) return;
   if (
@@ -777,6 +798,9 @@ document.addEventListener("keydown", (e) => {
 
 document.addEventListener("keyup", (e) => {
   if (e.key === "Alt") updateAltMask(false);
+  if (e.key === "Meta" || e.key === "Control") {
+    $canvasWrap.classList.remove("is-crosshair");
+  }
 });
 
 // ── Control event wiring ─────────────────────────────────────────────────────

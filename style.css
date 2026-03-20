@@ -522,8 +522,17 @@ input[type="range"]::-moz-range-thumb {
   aspect-ratio: 1;
   overflow: hidden;
   border-bottom: var(--s-line) solid var(--c-surface-on);
-  cursor: crosshair;
+  cursor: grab;
   touch-action: none;
+}
+
+.picker__canvas-wrap.is-grabbing {
+  cursor: grabbing;
+}
+
+.picker__canvas-wrap.is-crosshair,
+.picker__canvas-wrap.is-empty {
+  cursor: crosshair;
 }
 
 .picker__canvas-wrap canvas {
