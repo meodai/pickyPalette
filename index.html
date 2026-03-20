@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>PickyPalette</title>
+    <link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==" />
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/Iosevka/6.0.0/iosevka/iosevka.min.css"
@@ -23,6 +24,10 @@
       <details class="picker__manual">
         <summary>Removing Colors</summary>
         <p>Hover a swatch and click the <kbd>&times;</kbd> button. You can also select a swatch by clicking it, then press <kbd>Delete</kbd> or <kbd>Backspace</kbd>.</p>
+      </details>
+      <details class="picker__manual">
+        <summary>Moving a Color</summary>
+        <p>Hold <kbd>Shift</kbd> and drag on the canvas to move an existing color. The color whose region you click in will be picked up and repositioned as you drag. Press <kbd>Escape</kbd> to cancel and restore the original color.</p>
       </details>
       <details class="picker__manual">
         <summary>Inspecting a Color</summary>
@@ -65,7 +70,7 @@
         <p><a href="https://tokenbeam.dev" target="_blank" rel="noopener">Token Beam</a> is a real-time sync protocol for design tokens. It lets you beam your palette directly into tools like Figma, Aseprite, Blender, or any app with a Token Beam plugin. In Send mode, a session token is generated — copy it and paste it into the receiving tool. In Receive mode, paste a token from an external source to pull colors in.</p>
       </details>
 
-      <p class="picker__links">Built with <a href="https://github.com/meodai/color-palette-shader">palette-shader</a> — <a href="https://github.com/meodai/pickypalette">GitHub</a> — <a href="https://pickypalette.color.pizza/">pickypalette.color.pizza</a></p>
+      <p class="picker__links">Built with <a href="https://github.com/meodai/color-palette-shader">palette-shader</a>, <a href="https://culorijs.org">culori</a> &amp; <a href="https://github.com/darosh/colorsort-js">colorsort-js</a> — <a href="https://github.com/meodai/pickypalette">GitHub</a> — <a href="https://pickypalette.color.pizza/">pickypalette.color.pizza</a></p>
       <p>If you find this useful, consider <a href="https://ko-fi.com/colorparrot" rel="noopener" target="_blank">buying me a coffee</a>.</p>
       <a href="https://ko-fi.com/colorparrot" rel="noopener" target="_blank" class="kofi"><img src="https://storage.ko-fi.com/cdn/brandasset/kofi_s_logo_nolabel.png" alt="Ko-fi" /></a>
     </div>
@@ -120,6 +125,6 @@
         </div>
       </div>
     </div>
-    <script type="module" src="./main.js"></script>
+    <script type="module" src="./src/main.ts"></script>
   </body>
 </html>
