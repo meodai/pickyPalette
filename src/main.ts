@@ -711,6 +711,7 @@ function adjustPosition(delta: number): void {
   controls.$posSlider.value = String(v);
   viz.setPosition(v);
   refreshView();
+  updateProbe();
 }
 
 $canvasWrap.addEventListener(
