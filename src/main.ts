@@ -761,9 +761,10 @@ $canvasWrap.addEventListener("pointermove", (e) => {
 
   if (pointerState.dragging && pointerState.dragIndex >= 0) {
     const { u, v, inBounds } = getUV(e);
+    const useOffset = pointerState.moving && !e.altKey;
     const [lu, lv] = clampUV(
-      pointerState.moving ? u - pointerState.offsetU : u,
-      pointerState.moving ? v - pointerState.offsetV : v,
+      useOffset ? u - pointerState.offsetU : u,
+      useOffset ? v - pointerState.offsetV : v,
     );
     if (inBounds || pointerState.moving) {
       liveUpdateColor(pointerState.dragIndex, getRawHexAtUV(lu, lv));
