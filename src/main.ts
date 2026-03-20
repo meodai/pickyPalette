@@ -891,9 +891,10 @@ $canvasWrap.addEventListener("touchcancel", () => {
 const $probe = document.createElement("div");
 $probe.className = "cursor-probe";
 $probe.innerHTML =
-  '<span class="cursor-probe__dot"></span><span class="cursor-probe__label"></span>';
+  '<span class="cursor-probe__dot"></span><span class="cursor-probe__label"></span><span class="cursor-probe__hint"></span>';
 const $probeDot = $probe.querySelector<HTMLElement>(".cursor-probe__dot")!;
 const $probeLabel = $probe.querySelector<HTMLElement>(".cursor-probe__label")!;
+const $probeHint = $probe.querySelector<HTMLElement>(".cursor-probe__hint")!;
 document.body.appendChild($probe);
 
 let probeRAF: number | null = null;
@@ -919,6 +920,12 @@ function updateProbe(): void {
   const hex = rgbToHex(color);
   $probeDot.style.background = hex;
   $probeLabel.textContent = hex;
+  $probeHint.textContent =
+    palette.length === 0
+      ? "Click to add"
+      : palette.length === 1
+        ? "Double click to add"
+        : "";
   $probe.style.left = `${probeEvent.clientX + 14}px`;
   $probe.style.top = `${probeEvent.clientY + 14}px`;
   $probe.classList.add("is-visible");

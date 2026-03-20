@@ -984,7 +984,7 @@ input[type="range"]::-moz-range-thumb {
   top: 0;
   z-index: 1000;
   display: none;
-  align-items: stretch;
+  grid-template-columns: auto 1fr;
   gap: 0;
   padding: 0;
   border: var(--s-line) solid var(--c-surface-on);
@@ -996,7 +996,7 @@ input[type="range"]::-moz-range-thumb {
 }
 
 .cursor-probe.is-visible {
-  display: inline-flex;
+  display: inline-grid;
 }
 
 .cursor-probe__dot {
@@ -1010,4 +1010,17 @@ input[type="range"]::-moz-range-thumb {
   padding: 0.35rem 0.5rem;
   display: flex;
   align-items: center;
+}
+
+.cursor-probe__hint:empty {
+  display: none;
+}
+
+.cursor-probe__hint {
+  font-size: 0.6em;
+  padding: 0.25rem 0.5rem;
+  background: light-dark(var(--c-black), var(--c-white));
+  color: light-dark(var(--c-white), var(--c-black));
+  grid-column: 1 / -1;
+  grid-row: 1;
 }
