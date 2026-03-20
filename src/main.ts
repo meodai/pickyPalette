@@ -728,10 +728,15 @@ function updateCanvasCursor(): void {
 }
 
 $canvasWrap.addEventListener("pointermove", (e) => {
-  probeEvent = e;
+  if (e.pointerType === "touch") {
+    probeEvent = null;
+    hideProbe();
+  } else {
+    probeEvent = e;
+    if (probeRAF === null) probeRAF = requestAnimationFrame(updateProbe);
+  }
   syncModifiers(e);
   updateCanvasCursor();
-  if (probeRAF === null) probeRAF = requestAnimationFrame(updateProbe);
   updateAltMask();
 
   if (!pointerState || pointerState.id !== e.pointerId) return;
