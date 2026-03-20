@@ -62,6 +62,7 @@ let palette: string[] = [];
 let selectedIndex = -1;
 let sortedPalette: string[] | null = null;
 let pickMode = false;
+const modifierKeys = { meta: false, ctrl: false };
 
 function displayPalette(): string[] {
   return sortedPalette && sortedPalette.length === palette.length
@@ -79,7 +80,6 @@ const controls = createControls($tools, $sliderWrap);
 const viz = createVizManager($canvasWrap);
 
 function flipSwatches(updateFn: () => void): void {
-  // FLIP: record old positions keyed by hex
   const oldRects = new Map<string, DOMRect>();
   $swatches.querySelectorAll<HTMLElement>(".picker__swatch").forEach(($s) => {
     const name = $s.style.viewTransitionName;
@@ -88,7 +88,6 @@ function flipSwatches(updateFn: () => void): void {
 
   updateFn();
 
-  // FLIP: record new positions and animate
   $swatches
     .querySelectorAll<HTMLElement>(".picker__swatch")
     .forEach(($s, i) => {
@@ -117,7 +116,7 @@ const sort = createSortManager((sorted) => {
     viz.syncPalette(vizPalette());
     renderSwatches();
     syncPasteField();
-    viz.updateView(pickMode, palette.length > 0);
+    syncView();
     beam.sendPalette();
   });
 });
@@ -144,13 +143,23 @@ function scheduleFaviconUpdate(): void {
   );
 }
 
-// ── Refresh helpers ──────────────────────────────────────────────────────────
+// ── View helpers ─────────────────────────────────────────────────────────────
+
+function syncView(): void {
+  viz.updateView(pickMode, palette.length > 0);
+}
+
+function refreshView(): void {
+  syncView();
+  scheduleHashUpdate();
+  scheduleFaviconUpdate();
+}
 
 function refresh(): void {
   viz.syncPalette(vizPalette());
   renderSwatches();
   syncPasteField();
-  viz.updateView(pickMode, palette.length > 0);
+  syncView();
   scheduleHashUpdate();
   beam.sendPalette();
   scheduleFaviconUpdate();
@@ -214,8 +223,6 @@ function addColor(hex: string): void {
   if (palette.length >= MAX_COLORS) return;
   pushUndo();
   palette.push(hex);
-  // Keep previous sort order with the new color appended at the end,
-  // so it appears at the end first, then animates into place via FLIP.
   if (sortedPalette) sortedPalette = [...sortedPalette, hex];
   selectedIndex = palette.length - 1;
   refresh();
@@ -228,7 +235,6 @@ let _removeSortTimer: ReturnType<typeof setTimeout> | null = null;
 function removeColor(index: number): void {
   pushUndo();
   viz.hideHighlight();
-  // Remove from sorted palette too so the swatch disappears in place
   if (sortedPalette) {
     const hex = palette[index];
     const sortedIdx = sortedPalette.indexOf(hex);
@@ -238,17 +244,14 @@ function removeColor(index: number): void {
   if (selectedIndex >= palette.length) selectedIndex = palette.length - 1;
   if (palette.length === 0) selectedIndex = -1;
   refresh();
-  // Cancel any pending re-sort
   if (_removeSortTimer !== null) {
     clearTimeout(_removeSortTimer);
     _removeSortTimer = null;
   }
-  // No need to sort if fewer than 3 colors remain
   if (palette.length < 3) {
     sortedPalette = null;
     return;
   }
-  // Delay re-sort so rapid removals don't cause constant reshuffling
   _removeSortTimer = setTimeout(() => {
     _removeSortTimer = null;
     requestAutoSort();
@@ -264,14 +267,13 @@ function setColorAt(index: number, hex: string): void {
 
 function selectColor(index: number): void {
   selectedIndex = index;
-  // Just toggle the class — no need to rebuild the DOM
   $swatches.querySelectorAll(".picker__swatch").forEach((el) => {
     el.classList.toggle(
       "is-selected",
       (el as HTMLElement).dataset.index === String(index),
     );
   });
-  viz.updateView(pickMode, palette.length > 0);
+  syncView();
 }
 
 function setPalette(colors: string[]): void {
@@ -356,7 +358,6 @@ $paste.addEventListener("input", () => {
 });
 
 function syncPasteField(): void {
-  // Don't overwrite while the user is actively editing
   if (document.activeElement === $paste) return;
   pasteIsSync = true;
   $paste.value = displayPalette().join(", ");
@@ -365,30 +366,18 @@ function syncPasteField(): void {
 
 // ── Pick mode ────────────────────────────────────────────────────────────────
 
-function enterPickMode(): void {
-  pickMode = true;
-  $addBtn.classList.add("is-picking");
-  $addIcon.textContent = "\u00d7";
-  $addLabel.innerHTML = "<kbd>C</kbd> Cancel pick";
+function setPickMode(active: boolean): void {
+  pickMode = active;
+  $addBtn.classList.toggle("is-picking", active);
+  $addIcon.textContent = active ? "\u00d7" : "+";
+  $addLabel.innerHTML = active
+    ? "<kbd>C</kbd> Cancel pick"
+    : "<kbd>C</kbd> Add color";
   updateCanvasCursor();
-  viz.updateView(pickMode, palette.length > 0);
+  syncView();
 }
 
-function exitPickMode(): void {
-  pickMode = false;
-  $addBtn.classList.remove("is-picking");
-  $addIcon.textContent = "+";
-  $addLabel.innerHTML = "<kbd>C</kbd> Add color";
-  updateCanvasCursor();
-  viz.updateView(pickMode, palette.length > 0);
-}
-
-function togglePickMode(): void {
-  if (pickMode) exitPickMode();
-  else enterPickMode();
-}
-
-$addBtn.addEventListener("click", togglePickMode);
+$addBtn.addEventListener("click", () => setPickMode(!pickMode));
 
 // ── Canvas pointer interaction ───────────────────────────────────────────────
 
@@ -405,14 +394,12 @@ let pointerState: {
 } | null = null;
 let dragMaskRAF: number | null = null;
 
-/** Find the UV on the raw canvas that best matches a given hex color. */
 function findColorUV(hex: string, nearU: number, nearV: number): [number, number] {
-  // Read entire raw canvas in one go
   const canvas = viz.vizRaw.canvas;
   const gl = canvas.getContext("webgl2")!;
   const w = canvas.width, h = canvas.height;
   const px = new Uint8Array(w * h * 4);
-  viz.getRawColorAtUV(0.5, 0.5); // force render
+  viz.getRawColorAtUV(0.5, 0.5);
   gl.bindFramebuffer(gl.FRAMEBUFFER, null);
   gl.readPixels(0, 0, w, h, gl.RGBA, gl.UNSIGNED_BYTE, px);
 
@@ -430,14 +417,14 @@ function findColorUV(hex: string, nearU: number, nearV: number): [number, number
       if (d < bestDist) {
         bestDist = d;
         bestU = x / w;
-        bestV = y / h; // WebGL Y is already bottom-up, matching our V
+        bestV = y / h;
       }
     }
   }
   return [bestU, bestV];
 }
 
-function getUV(e: PointerEvent | MouseEvent): {
+function getUV(e: { clientX: number; clientY: number }): {
   u: number;
   v: number;
   inBounds: boolean;
@@ -452,10 +439,21 @@ function getRawHexAtUV(u: number, v: number): string {
   return rgbToHex(viz.getRawColorAtUV(u, v));
 }
 
+function clampUV(u: number, v: number): [number, number] {
+  return [Math.max(0, Math.min(1, u)), Math.max(0, Math.min(1, v))];
+}
+
+function paletteIndexAtCursor(e: { clientX: number; clientY: number }): number {
+  const { u, v, inBounds } = getUV(e);
+  if (!inBounds || !viz.vizClosest) return -1;
+  const cc = viz.getClosestColorAtUV(u, v);
+  if (!cc) return -1;
+  return findPaletteIndex(cc);
+}
+
 function liveUpdateColor(index: number, hex: string): void {
   const oldHex = palette[index];
   palette[index] = hex;
-  // Find the display slot — the shader palette uses displayPalette() order
   const dp = displayPalette();
   let displayIdx = dp.indexOf(oldHex);
   if (displayIdx < 0) displayIdx = index;
@@ -479,12 +477,11 @@ function cancelDrag(): void {
   }
   viz.hideMask();
   if (wasMoving) {
-    // Restore original color from undo stack
     undo();
   } else if (idx >= 0) {
     removeColor(idx);
   }
-  if (pickMode) exitPickMode();
+  if (pickMode) setPickMode(false);
 }
 
 function buildMask(colorIndex: number): void {
@@ -494,34 +491,25 @@ function buildMask(colorIndex: number): void {
 }
 
 let altMaskActive = false;
-
 let altMaskIndex = -1;
 
 function updateAltMask(altKey: boolean): void {
   if (altKey) {
-    // While dragging, always reveal the dragged color's region
     if (pointerState?.dragging && pointerState.dragIndex >= 0) {
       buildMask(pointerState.dragIndex);
       altMaskIndex = pointerState.dragIndex;
       altMaskActive = true;
       return;
     }
-    // While hovering, reveal the region under the cursor
     if (probeEvent) {
-      const rect = $canvasWrap.getBoundingClientRect();
-      const u = (probeEvent.clientX - rect.left) / rect.width;
-      const v = 1 - (probeEvent.clientY - rect.top) / rect.height;
-      if (u >= 0 && u <= 1 && v >= 0 && v <= 1 && viz.vizClosest) {
-        const closestColor = viz.getClosestColorAtUV(u, v);
-        if (closestColor) {
-          const idx = findPaletteIndex(closestColor);
-          if (idx >= 0 && idx !== altMaskIndex) {
-            buildMask(idx);
-            altMaskIndex = idx;
-          }
-          altMaskActive = true;
-          return;
-        }
+      const idx = paletteIndexAtCursor(probeEvent);
+      if (idx >= 0 && idx !== altMaskIndex) {
+        buildMask(idx);
+        altMaskIndex = idx;
+      }
+      if (idx >= 0) {
+        altMaskActive = true;
+        return;
       }
     }
   }
@@ -566,32 +554,21 @@ $canvasWrap.addEventListener("pointerdown", (e) => {
     isDblClick || e.metaKey || e.ctrlKey || pickMode || palette.length === 0;
 
   if (isDblClick) {
-    // Immediately add color at this position
     const { u, v, inBounds } = getUV(e);
-    if (inBounds) {
-      addColor(getRawHexAtUV(u, v));
-    }
+    if (inBounds) addColor(getRawHexAtUV(u, v));
   }
 
   // Select the color under the cursor before setting up the drag
-  if (!adding && !isDblClick && viz.vizClosest) {
-    const { u, v, inBounds } = getUV(e);
-    if (inBounds) {
-      const closestColor = viz.getClosestColorAtUV(u, v);
-      if (closestColor) {
-        const idx = findPaletteIndex(closestColor);
-        if (idx >= 0) selectColor(idx);
-      }
-    }
+  if (!adding && !isDblClick) {
+    const idx = paletteIndexAtCursor(e);
+    if (idx >= 0) selectColor(idx);
   }
 
   // Compute offset for relative dragging
   let offsetU = 0, offsetV = 0;
   const isMoving = !adding && selectedIndex >= 0;
   if (isMoving && !isDblClick) {
-    const rect = $canvasWrap.getBoundingClientRect();
-    const clickU = (e.clientX - rect.left) / rect.width;
-    const clickV = 1 - (e.clientY - rect.top) / rect.height;
+    const { u: clickU, v: clickV } = getUV(e);
     const [colorU, colorV] = findColorUV(palette[selectedIndex], clickU, clickV);
     offsetU = clickU - colorU;
     offsetV = clickV - colorV;
@@ -637,10 +614,8 @@ $canvasWrap.addEventListener("pointermove", (e) => {
     updateCanvasCursor(e);
 
     if (pointerState.moving && pointerState.dragIndex >= 0) {
-      // Drag: edit selected color
       pushUndo();
     } else {
-      // Cmd+drag or empty palette: add a new color
       const { u, v, inBounds } = getUV(e);
       if (inBounds) {
         addColor(getRawHexAtUV(u, v));
@@ -652,14 +627,11 @@ $canvasWrap.addEventListener("pointermove", (e) => {
 
   if (pointerState.dragging && pointerState.dragIndex >= 0) {
     const { u, v, inBounds } = getUV(e);
-    // Apply offset for relative movement (only when moving, not adding)
-    const lu = pointerState.moving ? u - pointerState.offsetU : u;
-    const lv = pointerState.moving ? v - pointerState.offsetV : v;
+    const [lu, lv] = pointerState.moving
+      ? clampUV(u - pointerState.offsetU, v - pointerState.offsetV)
+      : [u, v];
     if (inBounds) {
-      liveUpdateColor(
-        pointerState.dragIndex,
-        getRawHexAtUV(Math.max(0, Math.min(1, lu)), Math.max(0, Math.min(1, lv))),
-      );
+      liveUpdateColor(pointerState.dragIndex, getRawHexAtUV(lu, lv));
       if (!pointerState.moving && dragMaskRAF === null) {
         const idx = pointerState.dragIndex;
         dragMaskRAF = requestAnimationFrame(() => {
@@ -675,7 +647,6 @@ $canvasWrap.addEventListener("pointerup", (e) => {
   if (!pointerState || pointerState.id !== e.pointerId) return;
   const wasDragging = pointerState.dragging;
   const dragIndex = pointerState.dragIndex;
-  const wasAdding = !pointerState.moving;
   const wasMoving = pointerState.moving;
   const oU = pointerState.offsetU;
   const oV = pointerState.offsetV;
@@ -689,10 +660,9 @@ $canvasWrap.addEventListener("pointerup", (e) => {
   if (wasDragging) {
     viz.hideMask();
     const { u, v, inBounds } = getUV(e);
-    const fu = wasMoving ? Math.max(0, Math.min(1, u - oU)) : u;
-    const fv = wasMoving ? Math.max(0, Math.min(1, v - oV)) : v;
+    const [fu, fv] = wasMoving ? clampUV(u - oU, v - oV) : [u, v];
     if (inBounds && dragIndex >= 0) setColorAt(dragIndex, getRawHexAtUV(fu, fv));
-    if (pickMode) exitPickMode();
+    if (pickMode) setPickMode(false);
     altMaskIndex = -1;
     updateAltMask(e.altKey);
     updateProbe();
@@ -702,22 +672,16 @@ $canvasWrap.addEventListener("pointerup", (e) => {
   const { u, v, inBounds } = getUV(e);
   if (!inBounds) return;
 
-  // Click (no drag)
-  if (pickMode || wasAdding) {
+  if (pickMode || !wasMoving) {
     addColor(getRawHexAtUV(u, v));
-    if (pickMode) exitPickMode();
+    if (pickMode) setPickMode(false);
     updateProbe();
     return;
   }
 
   // Click without cmd: select the color under cursor
-  if (viz.vizClosest) {
-    const closestColor = viz.getClosestColorAtUV(u, v);
-    if (closestColor) {
-      const matchIndex = findPaletteIndex(closestColor);
-      if (matchIndex >= 0) selectColor(matchIndex);
-    }
-  }
+  const idx = paletteIndexAtCursor(e);
+  if (idx >= 0) selectColor(idx);
   updateProbe();
 });
 
@@ -744,9 +708,7 @@ function adjustPosition(delta: number): void {
   }
   controls.$posSlider.value = String(v);
   viz.setPosition(v);
-  viz.updateView(pickMode, palette.length > 0);
-  scheduleHashUpdate();
-  scheduleFaviconUpdate();
+  refreshView();
 }
 
 $canvasWrap.addEventListener(
@@ -786,14 +748,8 @@ $canvasWrap.addEventListener(
   { passive: false },
 );
 
-$canvasWrap.addEventListener("touchend", () => {
-  touchState = null;
-});
-$canvasWrap.addEventListener("touchcancel", () => {
-  touchState = null;
-});
-
-const modifierKeys = { meta: false, ctrl: false };
+$canvasWrap.addEventListener("touchend", () => { touchState = null; });
+$canvasWrap.addEventListener("touchcancel", () => { touchState = null; });
 
 // ── Cursor probe ─────────────────────────────────────────────────────────────
 
@@ -816,10 +772,8 @@ function hideProbe(): void {
 function updateProbe(): void {
   probeRAF = null;
   if (!probeEvent) return;
-  const rect = $canvasWrap.getBoundingClientRect();
-  const u = (probeEvent.clientX - rect.left) / rect.width;
-  const v = 1 - (probeEvent.clientY - rect.top) / rect.height;
-  if (u < 0 || u > 1 || v < 0 || v > 1) {
+  const { u, v, inBounds } = getUV(probeEvent);
+  if (!inBounds) {
     hideProbe();
     return;
   }
@@ -834,9 +788,8 @@ function updateProbe(): void {
   $probe.style.top = `${probeEvent.clientY + 14}px`;
   $probe.classList.add("is-visible");
 
-  // Highlight the region under the cursor (not when adding via Cmd/Ctrl)
-  const adding = modifierKeys.meta || modifierKeys.ctrl || pickMode;
-  if (!showRaw && !adding && closestColor) {
+  const isAdding = modifierKeys.meta || modifierKeys.ctrl || pickMode;
+  if (!showRaw && !isAdding && closestColor) {
     const idx = findPaletteIndex(closestColor);
     if (idx >= 0) {
       viz.highlightRegion(palette[idx]);
@@ -850,6 +803,19 @@ function updateProbe(): void {
 
 // ── Keyboard shortcuts ───────────────────────────────────────────────────────
 
+function isTextInput(e: KeyboardEvent): boolean {
+  const t = e.target;
+  if (t instanceof HTMLTextAreaElement || t instanceof HTMLSelectElement)
+    return true;
+  if (
+    t instanceof HTMLInputElement &&
+    t.type !== "range" &&
+    t.type !== "checkbox"
+  )
+    return true;
+  return false;
+}
+
 document.addEventListener("keydown", (e) => {
   updateCanvasCursor(e);
   updateProbe();
@@ -857,15 +823,7 @@ document.addEventListener("keydown", (e) => {
     updateAltMask(true);
     return;
   }
-  const t = e.target;
-  if (t instanceof HTMLTextAreaElement || t instanceof HTMLSelectElement)
-    return;
-  if (
-    t instanceof HTMLInputElement &&
-    t.type !== "range" &&
-    t.type !== "checkbox"
-  )
-    return;
+  if (isTextInput(e)) return;
   if ((e.metaKey || e.ctrlKey) && e.key === "z") {
     e.preventDefault();
     undo();
@@ -873,24 +831,15 @@ document.addEventListener("keydown", (e) => {
   }
   if (e.key === "c" || e.key === "C") {
     e.preventDefault();
-    togglePickMode();
+    setPickMode(!pickMode);
   }
   if (e.key === "Delete" || e.key === "Backspace") {
-    // If hovering the canvas, remove the color under the cursor
-    if (probeEvent && viz.vizClosest) {
-      const rect = $canvasWrap.getBoundingClientRect();
-      const u = (probeEvent.clientX - rect.left) / rect.width;
-      const v = 1 - (probeEvent.clientY - rect.top) / rect.height;
-      if (u >= 0 && u <= 1 && v >= 0 && v <= 1) {
-        const cc = viz.getClosestColorAtUV(u, v);
-        if (cc) {
-          const idx = findPaletteIndex(cc);
-          if (idx >= 0) {
-            e.preventDefault();
-            removeColor(idx);
-            return;
-          }
-        }
+    if (probeEvent) {
+      const idx = paletteIndexAtCursor(probeEvent);
+      if (idx >= 0) {
+        e.preventDefault();
+        removeColor(idx);
+        return;
       }
     }
     if (selectedIndex >= 0 && selectedIndex < palette.length) {
@@ -902,7 +851,7 @@ document.addEventListener("keydown", (e) => {
     if (pointerState?.dragging) {
       e.preventDefault();
       cancelDrag();
-    } else if (pickMode) exitPickMode();
+    } else if (pickMode) setPickMode(false);
   }
 });
 
@@ -916,30 +865,22 @@ document.addEventListener("keyup", (e) => {
 
 controls.onAxisChange = (axis: Axis) => {
   viz.setAxis(axis);
-  viz.updateView(pickMode, palette.length > 0);
-  scheduleHashUpdate();
-  scheduleFaviconUpdate();
+  refreshView();
 };
 
 controls.$colorModel.addEventListener("change", () => {
   viz.setColorModel(controls.$colorModel.value);
-  viz.updateView(pickMode, palette.length > 0);
-  scheduleHashUpdate();
-  scheduleFaviconUpdate();
+  refreshView();
 });
 
 controls.$distanceMetric.addEventListener("change", () => {
   viz.setDistanceMetric(controls.$distanceMetric.value);
-  viz.updateView(pickMode, palette.length > 0);
-  scheduleHashUpdate();
-  scheduleFaviconUpdate();
+  refreshView();
 });
 
 controls.$posSlider.addEventListener("input", () => {
   viz.setPosition(parseFloat(controls.$posSlider.value));
-  viz.updateView(pickMode, palette.length > 0);
-  scheduleHashUpdate();
-  scheduleFaviconUpdate();
+  refreshView();
 });
 
 controls.$outlineCheckbox.addEventListener("change", () => {
@@ -972,7 +913,7 @@ const resizeObserver = new ResizeObserver((entries) => {
     const w = Math.round(entry.contentRect.width);
     if (w > 0) {
       viz.resize(w);
-      viz.updateView(pickMode, palette.length > 0);
+      syncView();
     }
   }
 });
@@ -1003,14 +944,14 @@ function applyHashState(state: HashState): void {
   controls.setAxis(state.axis);
   controls.updateLabels();
   renderSwatches();
-  viz.updateView(pickMode, palette.length > 0);
+  syncView();
   requestAutoSort();
 }
 
 // ── Init ─────────────────────────────────────────────────────────────────────
 
 renderSwatches();
-viz.updateView(pickMode, palette.length > 0);
+syncView();
 
 requestAnimationFrame(() => {
   setTimeout(() => {
