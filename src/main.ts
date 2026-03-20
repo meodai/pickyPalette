@@ -149,10 +149,16 @@ function syncView(): void {
   viz.updateView(pickMode, palette.length > 0);
 }
 
+function stateDidChange(): void {
+  updateCanvasCursor();
+  updateProbe();
+}
+
 function refreshView(): void {
   syncView();
   scheduleHashUpdate();
   scheduleFaviconUpdate();
+  stateDidChange();
 }
 
 function refresh(): void {
@@ -163,6 +169,7 @@ function refresh(): void {
   scheduleHashUpdate();
   beam.sendPalette();
   scheduleFaviconUpdate();
+  stateDidChange();
 }
 
 function requestAutoSort(): void {
@@ -274,6 +281,7 @@ function selectColor(index: number): void {
     );
   });
   syncView();
+  stateDidChange();
 }
 
 function setPalette(colors: string[]): void {
@@ -373,8 +381,8 @@ function setPickMode(active: boolean): void {
   $addLabel.innerHTML = active
     ? "<kbd>C</kbd> Cancel pick"
     : "<kbd>C</kbd> Add color";
-  updateCanvasCursor();
   syncView();
+  stateDidChange();
 }
 
 $addBtn.addEventListener("click", () => setPickMode(!pickMode));
@@ -652,7 +660,6 @@ $canvasWrap.addEventListener("pointerup", (e) => {
   const oU = pointerState.offsetU;
   const oV = pointerState.offsetV;
   pointerState = null;
-  updateCanvasCursor();
   if (dragMaskRAF !== null) {
     cancelAnimationFrame(dragMaskRAF);
     dragMaskRAF = null;
@@ -667,7 +674,7 @@ $canvasWrap.addEventListener("pointerup", (e) => {
     if (pickMode) setPickMode(false);
     altMaskIndex = -1;
     updateAltMask(e.altKey);
-    updateProbe();
+    stateDidChange();
     return;
   }
 
@@ -677,19 +684,17 @@ $canvasWrap.addEventListener("pointerup", (e) => {
   if (pickMode || !wasMoving) {
     addColor(getRawHexAtUV(u, v));
     if (pickMode) setPickMode(false);
-    updateProbe();
     return;
   }
 
   // Click without cmd: select the color under cursor
   const idx = paletteIndexAtCursor(e);
   if (idx >= 0) selectColor(idx);
-  updateProbe();
 });
 
 $canvasWrap.addEventListener("pointercancel", () => {
   pointerState = null;
-  updateCanvasCursor();
+  stateDidChange();
   if (dragMaskRAF !== null) {
     cancelAnimationFrame(dragMaskRAF);
     dragMaskRAF = null;
@@ -820,8 +825,11 @@ function isTextInput(e: KeyboardEvent): boolean {
 }
 
 document.addEventListener("keydown", (e) => {
-  updateCanvasCursor(e);
-  updateProbe();
+  if (e) {
+    modifierKeys.meta = e.metaKey;
+    modifierKeys.ctrl = e.ctrlKey;
+  }
+  stateDidChange();
   if (e.key === "Alt") {
     updateAltMask(true);
     return;
@@ -859,8 +867,9 @@ document.addEventListener("keydown", (e) => {
 });
 
 document.addEventListener("keyup", (e) => {
-  updateCanvasCursor(e);
-  updateProbe();
+  modifierKeys.meta = e.metaKey;
+  modifierKeys.ctrl = e.ctrlKey;
+  stateDidChange();
   if (e.key === "Alt") updateAltMask(false);
 });
 
