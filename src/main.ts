@@ -339,17 +339,24 @@ function renderSwatches(): void {
 
 let pasteIsSync = false;
 
+let _pasteTimer: ReturnType<typeof setTimeout> | null = null;
+
 $paste.addEventListener("input", () => {
   if (pasteIsSync) return;
-  const colors = $paste.value
-    .split(/[\s,]+/)
-    .map((s) => s.trim().replace(/^#?/, "#"))
-    .filter((s) => /^#([0-9a-f]{3}){1,2}$/i.test(s));
-  setPalette(colors);
-  if (colors.length > 0) closeIO();
+  if (_pasteTimer !== null) clearTimeout(_pasteTimer);
+  _pasteTimer = setTimeout(() => {
+    _pasteTimer = null;
+    const colors = $paste.value
+      .split(/[\s,]+/)
+      .map((s) => s.trim().replace(/^#?/, "#"))
+      .filter((s) => /^#([0-9a-f]{3}){1,2}$/i.test(s));
+    setPalette(colors);
+  }, 600);
 });
 
 function syncPasteField(): void {
+  // Don't overwrite while the user is actively editing
+  if (document.activeElement === $paste) return;
   pasteIsSync = true;
   $paste.value = displayPalette().join(", ");
   pasteIsSync = false;
