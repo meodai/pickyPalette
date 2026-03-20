@@ -81,11 +81,32 @@ const sort = createSortManager((sorted) => {
   // setColorAt() at drag end will re-request a sort with the final color.
   if (pointerState?.dragging) return;
   sortedPalette = sorted;
-  viz.syncPalette(vizPalette());
-  renderSwatches();
-  syncPasteField();
-  viz.updateView(pickMode, palette.length > 0);
-  beam.sendPalette();
+
+  const update = () => {
+    viz.syncPalette(vizPalette());
+    renderSwatches();
+    syncPasteField();
+    viz.updateView(pickMode, palette.length > 0);
+    beam.sendPalette();
+  };
+
+  if (document.startViewTransition) {
+    const t = document.startViewTransition(update);
+    t.ready.then(() => {
+      const dp = displayPalette();
+      const style = document.createElement("style");
+      style.textContent = dp
+        .map(
+          (hex, i) =>
+            `::view-transition-group(swatch-${hex.replace("#", "")}) { animation-delay: ${i * 50}ms; }`,
+        )
+        .join("\n");
+      document.head.appendChild(style);
+      t.finished.then(() => style.remove());
+    });
+  } else {
+    update();
+  }
 });
 
 const beam = createBeamManager(
@@ -180,20 +201,43 @@ function addColor(hex: string): void {
   if (palette.length >= MAX_COLORS) return;
   pushUndo();
   palette.push(hex);
-  sortedPalette = null;
+  // Keep previous sort order with the new color appended at the end,
+  // so it appears at the end first, then animates into place via view transition.
+  if (sortedPalette) sortedPalette = [...sortedPalette, hex];
   selectedIndex = palette.length - 1;
   refresh();
   requestAutoSort();
 }
 
+let _removeSortTimer: ReturnType<typeof setTimeout> | null = null;
+
 function removeColor(index: number): void {
   pushUndo();
+  // Remove from sorted palette too so the swatch disappears in place
+  if (sortedPalette) {
+    const hex = palette[index];
+    const sortedIdx = sortedPalette.indexOf(hex);
+    if (sortedIdx >= 0) sortedPalette.splice(sortedIdx, 1);
+  }
   palette.splice(index, 1);
   if (selectedIndex >= palette.length) selectedIndex = palette.length - 1;
   if (palette.length === 0) selectedIndex = -1;
-  sortedPalette = null;
   refresh();
-  requestAutoSort();
+  // Cancel any pending re-sort
+  if (_removeSortTimer !== null) {
+    clearTimeout(_removeSortTimer);
+    _removeSortTimer = null;
+  }
+  // No need to sort if fewer than 3 colors remain
+  if (palette.length < 3) {
+    sortedPalette = null;
+    return;
+  }
+  // Delay re-sort so rapid removals don't cause constant reshuffling
+  _removeSortTimer = setTimeout(() => {
+    _removeSortTimer = null;
+    requestAutoSort();
+  }, 1000);
 }
 
 function setColorAt(index: number, hex: string): void {
@@ -239,6 +283,8 @@ function renderSwatches(): void {
     const $s = document.createElement("span");
     $s.className = "picker__swatch";
     $s.style.background = hex;
+    $s.style.viewTransitionName = `swatch-${hex.replace("#", "")}`;
+    $s.style.setProperty("--i", String(displayIdx));
     $s.dataset.index = String(srcIndex);
     if (srcIndex === selectedIndex) $s.classList.add("is-selected");
 
