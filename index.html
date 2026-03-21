@@ -6,7 +6,7 @@
     <title>PickyPalette</title>
     <meta
       name="description"
-      content="A color picker that visualizes how much visual weight each color claims in your palette using Voronoi-like regions in perceptual color space."
+      content="A color picker where you sculpt a palette directly on a color model. Colors claim territory based on perceptual distance, so every move reshapes the whole palette."
     />
     <meta name="author" content="meodai" />
     <meta
@@ -25,7 +25,7 @@
     <meta property="og:title" content="PickyPalette" />
     <meta
       property="og:description"
-      content="A color picker that visualizes how much visual weight each color claims in your palette using Voronoi-like regions in perceptual color space."
+      content="A color picker where you sculpt a palette directly on a color model. Colors claim territory based on perceptual distance, so every move reshapes the whole palette."
     />
     <meta property="og:url" content="https://pickypalette.color.pizza/" />
     <meta
@@ -40,7 +40,7 @@
     <meta name="twitter:title" content="PickyPalette" />
     <meta
       name="twitter:description"
-      content="A color picker that visualizes how much visual weight each color claims in your palette using Voronoi-like regions in perceptual color space."
+      content="A color picker where you sculpt a palette directly on a color model. Colors claim territory based on perceptual distance, so every move reshapes the whole palette."
     />
     <meta
       name="twitter:image"
@@ -62,19 +62,10 @@
     <div class="picker__about">
       <h1>PickyPalette</h1>
       <p>
-        A research project exploring the interaction design of a palette-aware
-        color picker — what happens when the tool itself shows you how your
-        colors relate to each other?
-      </p>
-      <p>
-        The canvas maps a color space onto a plane — as you add colors, it
-        splits into regions showing which color is closest at every point. A
-        color that's far from all others claims a large region; one that's close
-        to a neighbor gets squeezed into a sliver. There's no predetermined
-        weight factor — it emerges naturally from how your colors are
-        distributed, measured by a perceptual distance metric (like OKLab or
-        ΔE2000) from color science. Drag a color and watch the territories shift
-        in real time.
+        A color picker where you sculpt a palette directly on a color model.
+        Colors claim territory based on perceptual distance, so every move
+        reshapes the whole palette. Drag to tweak, hold
+        <kbd>Cmd</kbd> to preview — the canvas is the instrument.
       </p>
 
       <h2>Keys &amp; Shortcuts</h2>

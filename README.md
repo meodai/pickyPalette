@@ -1,8 +1,6 @@
 # PickyPalette
 
-A research project exploring the interaction design of a palette-aware color picker — what happens when the tool itself shows you how your colors relate to each other?
-
-The canvas maps a color space onto a plane — as you add colors, it splits into regions showing which color is closest at every point. A color that's far from all others claims a large region; one that's close to a neighbor gets squeezed into a sliver. There's no predetermined weight factor — it emerges naturally from how your colors are distributed, measured by a perceptual distance metric (like OKLab or ΔE2000) from color science.
+A color picker where you sculpt a palette directly on a color model. Colors claim territory based on perceptual distance, so every move reshapes the whole palette. Drag to tweak, hold Cmd to preview — the canvas is the instrument.
 
 **[pickypalette.color.pizza](https://pickypalette.color.pizza/)**
 
