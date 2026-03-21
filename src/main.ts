@@ -10,7 +10,7 @@
  * Cmd/Ctrl + drag    → add a new color and adjust it live
  * Double-click       → add a new color (hold to drag-adjust)
  * Empty canvas       → click/drag always adds
- * Scroll / 2-finger  → adjust the position slider (3rd axis)
+ * Scroll             → adjust the position slider (3rd axis)
  *
  * Modifiers (canvas & swatches)
  * -----------------------------
@@ -505,6 +505,7 @@ $addBtn.addEventListener("click", () => setPickMode(!pickMode));
 // ── Canvas pointer interaction ───────────────────────────────────────────────
 
 const DRAG_THRESHOLD = 5;
+const LONG_PRESS_MS = 400;
 let pointerState: {
   x: number;
   y: number;
@@ -514,6 +515,14 @@ let pointerState: {
   moving: boolean;
 } | null = null;
 let dragMaskRAF: number | null = null;
+let longPressTimer: ReturnType<typeof setTimeout> | null = null;
+
+function clearLongPress(): void {
+  if (longPressTimer !== null) {
+    clearTimeout(longPressTimer);
+    longPressTimer = null;
+  }
+}
 
 function getUV(e: { clientX: number; clientY: number }): {
   u: number;
@@ -672,6 +681,23 @@ $canvasWrap.addEventListener("pointerdown", (e) => {
     moving: isDblClick || isMoving,
   };
   $canvasWrap.setPointerCapture(e.pointerId);
+
+  // Long-press to add on touch (only when not already adding)
+  if (e.pointerType === "touch" && !adding && !isDblClick) {
+    clearLongPress();
+    longPressTimer = setTimeout(() => {
+      longPressTimer = null;
+      if (!pointerState || pointerState.dragging) return;
+      const { u, v, inBounds } = getUV(e);
+      if (!inBounds) return;
+      addColor(getRawHexAtUV(u, v));
+      pointerState.dragging = true;
+      pointerState.dragIndex = palette.length - 1;
+      pointerState.moving = false;
+      buildMask(pointerState.dragIndex);
+      stateDidChange();
+    }, LONG_PRESS_MS);
+  }
 });
 
 function updateCanvasCursor(): void {
@@ -699,6 +725,7 @@ $canvasWrap.addEventListener("pointermove", (e) => {
   const dy = e.clientY - pointerState.y;
 
   if (!pointerState.dragging && Math.hypot(dx, dy) > DRAG_THRESHOLD) {
+    clearLongPress();
     pointerState.dragging = true;
     stateDidChange();
 
@@ -730,6 +757,7 @@ $canvasWrap.addEventListener("pointermove", (e) => {
 });
 
 $canvasWrap.addEventListener("pointerup", (e) => {
+  clearLongPress();
   if (!pointerState || pointerState.id !== e.pointerId) return;
   const wasDragging = pointerState.dragging;
   const dragIndex = pointerState.dragIndex;
@@ -768,6 +796,7 @@ $canvasWrap.addEventListener("pointerup", (e) => {
 });
 
 $canvasWrap.addEventListener("pointercancel", () => {
+  clearLongPress();
   pointerState = null;
   stateDidChange();
   if (dragMaskRAF !== null) {
@@ -806,39 +835,6 @@ $canvasWrap.addEventListener(
   { passive: false },
 );
 
-let touchState: { y: number } | null = null;
-
-$canvasWrap.addEventListener(
-  "touchstart",
-  (e) => {
-    if (e.touches.length === 2) {
-      e.preventDefault();
-      touchState = { y: (e.touches[0].clientY + e.touches[1].clientY) / 2 };
-    }
-  },
-  { passive: false },
-);
-
-$canvasWrap.addEventListener(
-  "touchmove",
-  (e) => {
-    if (e.touches.length === 2 && touchState) {
-      e.preventDefault();
-      const y = (e.touches[0].clientY + e.touches[1].clientY) / 2;
-      const delta = (touchState.y - y) * -0.003;
-      touchState.y = y;
-      adjustPosition(delta);
-    }
-  },
-  { passive: false },
-);
-
-$canvasWrap.addEventListener("touchend", () => {
-  touchState = null;
-});
-$canvasWrap.addEventListener("touchcancel", () => {
-  touchState = null;
-});
 
 // ── Cursor probe ─────────────────────────────────────────────────────────────
 

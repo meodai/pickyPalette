@@ -562,6 +562,7 @@ input[type="range"]::-moz-range-thumb {
   display: flex;
   align-items: stretch;
   border-bottom: var(--s-line) solid var(--c-surface-on);
+  overflow: hidden;
 }
 
 .picker__axis-switcher {
@@ -620,6 +621,8 @@ input[type="range"]::-moz-range-thumb {
   flex: 1;
   min-width: 0;
   position: relative;
+  margin: -0.5rem 0;
+  padding: 0.5rem 0;
   background: var(--c-surface);
   overflow: clip;
 }

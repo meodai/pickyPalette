@@ -20,7 +20,7 @@ The canvas maps a color space onto a plane — as you add colors, it splits into
 | <kbd>Esc</kbd>                                        | Cancel drag or exit pick mode                     |
 | <kbd>Alt</kbd> / <kbd>Option</kbd>                    | Reveal raw color space under hovered region       |
 | <kbd>Shift</kbd> + <kbd>Alt</kbd> / <kbd>Option</kbd> | Isolate color (flat region stays, rest shows raw) |
-| Scroll / two-finger swipe                             | Adjust position slider (3rd axis)                 |
+| Scroll                                                | Adjust position slider (3rd axis)                 |
 
 - Dragging moves the color relative to its position (no snapping to cursor).
 - An empty canvas treats any click/drag as adding a color.
@@ -30,7 +30,7 @@ The canvas maps a color space onto a plane — as you add colors, it splits into
 
 **Pasting colors** — Type or paste hex values into the import/export field (comma or space separated). The palette updates with all valid colors; clearing the field removes all colors.
 
-**Position slider & axis** — The slider controls the third dimension of the color space. Click the axis label to cycle through axes. Scroll or two-finger swipe on the canvas to adjust.
+**Position slider & axis** — The slider controls the third dimension of the color space. Click the axis label to cycle through axes. Scroll on the canvas to adjust.
 
 **Auto-sort** — Swatches are automatically sorted using ML-trained color sorting (via [colorsort-js](https://github.com/darosh/colorsort-js)) when you have more than 2 colors. Toggle this in settings.
 
