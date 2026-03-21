@@ -23,7 +23,7 @@
  * --------
  * C                  → toggle pick mode (crosshair, next click adds)
  * Cmd/Ctrl + Z       → undo
- * Delete / Backspace → remove color under cursor (canvas) or selected color
+ * Delete / Backspace → remove hovered swatch, color under cursor, or selected
  * Escape             → cancel drag or exit pick mode
  *
  * Cursors

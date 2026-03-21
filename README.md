@@ -14,7 +14,7 @@ A color picker where you sculpt a palette directly on a color model. Colors clai
 | Double-click                                          | Add a new color (hold to drag-adjust)             |
 | <kbd>C</kbd>                                          | Toggle pick mode (next click adds)                |
 | <kbd>Cmd</kbd> / <kbd>Ctrl</kbd> + <kbd>Z</kbd>       | Undo                                              |
-| <kbd>Delete</kbd> / <kbd>Backspace</kbd>              | Remove color under cursor or selected color       |
+| <kbd>Delete</kbd> / <kbd>Backspace</kbd>              | Remove hovered swatch, cursor color, or selected  |
 | <kbd>Esc</kbd>                                        | Cancel drag or exit pick mode                     |
 | <kbd>Alt</kbd> / <kbd>Option</kbd>                    | Reveal raw color space under hovered region       |
 | <kbd>Shift</kbd> + <kbd>Alt</kbd> / <kbd>Option</kbd> | Isolate color (flat region stays, rest shows raw) |
