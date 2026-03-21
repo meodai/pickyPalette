@@ -28,6 +28,7 @@ declare module "palette-shader" {
     container: HTMLElement;
     outlineWidth?: number;
     gamutClip?: boolean;
+    invertAxes?: string[];
   }
 
   export class PaletteViz {

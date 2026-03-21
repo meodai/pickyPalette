@@ -127,6 +127,7 @@ export function createVizManager($canvasWrap: HTMLElement): VizManager {
       position: currentPosition,
       outlineWidth: currentOutlineWidth,
       gamutClip: currentGamutClip,
+      invertAxes: currentInvertZ ? ["z"] : [],
     });
     $canvasWrap.appendChild(maskCanvas);
     return vizClosest;
