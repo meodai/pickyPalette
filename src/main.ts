@@ -297,7 +297,7 @@ function stateDidChange(): void {
 }
 
 function refreshMarkers(): void {
-  if (showMarkers) viz.drawMarkers(palette, hoveredMarkerIndex);
+  if (showMarkers || pickMode) viz.drawMarkers(palette, hoveredMarkerIndex, previewIndex);
 }
 
 function toggleMarkers(force?: boolean): void {
@@ -772,6 +772,15 @@ const DBLCLICK_DIST = 10;
 $canvasWrap.addEventListener("pointerdown", (e) => {
   if (e.button !== 0) return;
 
+  // Track double-click timing early so marker taps don't break it
+  const now = performance.now();
+  const isDblClick =
+    now - lastClickTime < DBLCLICK_MS &&
+    Math.hypot(e.clientX - lastClickX, e.clientY - lastClickY) < DBLCLICK_DIST;
+  lastClickTime = now;
+  lastClickX = e.clientX;
+  lastClickY = e.clientY;
+
   // Tap on a marker (touch): jump slider to that color's slice
   const touchMarker =
     e.pointerType === "touch" && showMarkers && !pickMode
@@ -779,8 +788,9 @@ $canvasWrap.addEventListener("pointerdown", (e) => {
       : null;
 
   // Click on a hovered marker (mouse) or tapped marker (touch)
+  // Skip if double-click — let double-click add a new color instead
   const markerIdx = touchMarker ? touchMarker.paletteIndex : hoveredMarkerIndex;
-  if (markerIdx >= 0 && !pickMode) {
+  if (markerIdx >= 0 && !pickMode && !isDblClick) {
     const idx = markerIdx;
     const hex = palette[idx];
     const sliderVal = getSliderValue(
@@ -823,14 +833,6 @@ $canvasWrap.addEventListener("pointerdown", (e) => {
     $canvasWrap.setPointerCapture(e.pointerId);
     return;
   }
-
-  const now = performance.now();
-  const isDblClick =
-    now - lastClickTime < DBLCLICK_MS &&
-    Math.hypot(e.clientX - lastClickX, e.clientY - lastClickY) < DBLCLICK_DIST;
-  lastClickTime = now;
-  lastClickX = e.clientX;
-  lastClickY = e.clientY;
 
   const adding =
     isDblClick || e.metaKey || e.ctrlKey || pickMode || palette.length === 0;

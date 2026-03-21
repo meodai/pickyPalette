@@ -39,7 +39,7 @@ export interface VizManager {
   highlightRegion(hex: string): void;
   hideHighlight(): void;
 
-  drawMarkers(palette: string[], hoveredIndex?: number): void;
+  drawMarkers(palette: string[], hoveredIndex?: number, skipIndex?: number): void;
   setMarkersVisible(visible: boolean): void;
   getMarkers(): MarkerInfo[];
 
@@ -294,7 +294,7 @@ export function createVizManager($canvasWrap: HTMLElement): VizManager {
 
   let currentMarkers: MarkerInfo[] = [];
 
-  function drawMarkers(palette: string[], hoveredIndex = -1): void {
+  function drawMarkers(palette: string[], hoveredIndex = -1, skipIndex = -1): void {
     const w = vizRaw.canvas.width;
     const h = vizRaw.canvas.height;
     markersCanvas.width = w;
@@ -312,6 +312,7 @@ export function createVizManager($canvasWrap: HTMLElement): VizManager {
     const hoverGrow = 6 * pixelRatio;
 
     for (let i = 0; i < palette.length; i++) {
+      if (i === skipIndex) continue;
       const hex = palette[i];
       const pos = getColorUV(hex, currentColorModel, currentAxis, currentPosition);
       if (!pos) continue;
