@@ -10,7 +10,9 @@ function createHarness(options?: {
 }) {
   let palette = [...(options?.palette ?? [])];
   let selectedIndex = options?.selectedIndex ?? (palette.length > 0 ? 0 : -1);
-  let sortedPalette = options?.sortedPalette ? [...options.sortedPalette] : null;
+  let sortedPalette = options?.sortedPalette
+    ? [...options.sortedPalette]
+    : null;
 
   const refresh = vi.fn();
   const requestAutoSort = vi.fn();
