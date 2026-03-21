@@ -18,6 +18,8 @@
  * Alt/Option          → reveal raw color space under the hovered region
  * Shift + Alt/Option  → isolate the hovered color (flat region stays,
  *                       rest shows raw color space)
+ * Cmd/Ctrl + Alt      → preview color with raw color space reveal
+ * Cmd/Ctrl + Alt + Shift → preview color with isolation mask
  *
  * Keyboard
  * --------

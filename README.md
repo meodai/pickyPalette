@@ -20,6 +20,8 @@ A color picker where you sculpt a palette directly on a color model. Colors clai
 | <kbd>Esc</kbd>                                        | Cancel drag or exit pick mode                     |
 | <kbd>Alt</kbd> / <kbd>Option</kbd>                    | Reveal raw color space under hovered region       |
 | <kbd>Shift</kbd> + <kbd>Alt</kbd> / <kbd>Option</kbd> | Isolate color (flat region stays, rest shows raw) |
+| <kbd>Cmd</kbd> + <kbd>Alt</kbd>                       | Preview color with raw color space reveal         |
+| <kbd>Cmd</kbd> + <kbd>Alt</kbd> + <kbd>Shift</kbd>    | Preview color with isolation mask                 |
 | Scroll                                                | Adjust position slider (3rd axis)                 |
 | Long tap (touch)                                      | Add a new color (hold to drag-adjust)             |
 
