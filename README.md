@@ -71,6 +71,7 @@ npx tsc --noEmit # type check (strict mode)
 - [culori](https://culorijs.org) — Color conversion and color space math
 - [colorsort-js](https://github.com/darosh/colorsort-js) — ML-trained color sorting algorithms
 - [token-beam](https://tokenbeam.dev) — Real-time design token sync protocol
+- [Iosevka](https://typeof.net/Iosevka/) — Open-source monospace typeface
 - [Vite](https://vitejs.dev) — Build tooling
 
 ## Roadmap
