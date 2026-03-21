@@ -178,8 +178,9 @@ export function computeSliderStops(colorModel: string, axis: Axis): string[] {
     );
   }
 
-  // Shader inverts z-axis: colorCoords.z = 1 - progress
-  if (axis === "z") stops.reverse();
+  // Shader inverts z-axis always, and y-axis in polar models
+  const isPolar = POLAR_MODELS.has(colorModel);
+  if (axis === "z" || (isPolar && axis === "y")) stops.reverse();
   return stops;
 }
 
