@@ -1000,7 +1000,9 @@ $canvasWrap.addEventListener("pointermove", (e) => {
   if (pointerState.dragging && pointerState.dragIndex >= 0) {
     const { u, v, inBounds } = getUV(e);
     if (inBounds || pointerState.moving) {
-      const sliceHex = getRawHexAtUV(u, v);
+      const cu = Math.max(0, Math.min(1, u));
+      const cv = Math.max(0, Math.min(1, v));
+      const sliceHex = getRawHexAtUV(cu, cv);
       let hex: string;
       if (pointerState.moving && controls.$snapAxisCheckbox.checked) {
         const dist = Math.hypot(e.clientX - pointerState.x, e.clientY - pointerState.y);
@@ -1039,9 +1041,14 @@ $canvasWrap.addEventListener("pointerup", (e) => {
 
   if (wasDragging) {
     viz.hideMask();
-    const { u, v, inBounds } = getUV(e);
-    if (inBounds && dragIndex >= 0)
-      setColorAt(dragIndex, getRawHexAtUV(u, v));
+    if (wasMoving && controls.$snapAxisCheckbox.checked) {
+      // Easing mode: keep the blended color from the last pointermove
+      if (dragIndex >= 0) setColorAt(dragIndex, palette[dragIndex]);
+    } else {
+      const { u, v, inBounds } = getUV(e);
+      if (inBounds && dragIndex >= 0)
+        setColorAt(dragIndex, getRawHexAtUV(u, v));
+    }
     if (pickMode) setPickMode(false);
     altMaskIndex = -1;
     updateAltMask();
