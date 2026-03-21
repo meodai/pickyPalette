@@ -707,7 +707,11 @@ function updateAltMask(): void {
     }
     // Preview color always gets a fresh mask rebuild since it moves
     if (previewIndex >= 0) {
-      buildMask(previewIndex);
+      if (modifierKeys.shift) {
+        viz.compositeMask(palette[previewIndex], "closest", "raw");
+      } else {
+        buildMask(previewIndex);
+      }
       altMaskIndex = previewIndex;
       altMaskActive = true;
       return;
