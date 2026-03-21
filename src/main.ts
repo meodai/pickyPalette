@@ -329,6 +329,58 @@ function undo(): void {
   requestAutoSort();
 }
 
+// ── Preview color (Cmd/Ctrl hover) ──────────────────────────────────────────
+
+let previewIndex = -1;
+
+function showPreview(hex: string): void {
+  if (palette.length >= MAX_COLORS) return;
+  if (previewIndex >= 0) {
+    // update existing preview
+    liveUpdateColor(previewIndex, hex);
+  } else {
+    palette.push(hex);
+    if (sortedPalette) sortedPalette = [...sortedPalette, hex];
+    previewIndex = palette.length - 1;
+    selectedIndex = previewIndex;
+    viz.syncPalette(vizPalette());
+    renderSwatches();
+    syncView();
+  }
+  if (modifierKeys.alt) updateAltMask();
+}
+
+function commitPreview(): void {
+  if (previewIndex < 0) return;
+  const hex = palette[previewIndex];
+  previewIndex = -1;
+  // treat as a real add — push undo, refresh
+  pushUndo();
+  refresh();
+  viz.highlightRegion(hex);
+  requestAutoSort();
+}
+
+function cancelPreview(): void {
+  if (previewIndex < 0) return;
+  const idx = previewIndex;
+  previewIndex = -1;
+  if (sortedPalette) {
+    const hex = palette[idx];
+    const si = sortedPalette.indexOf(hex);
+    if (si >= 0) sortedPalette.splice(si, 1);
+  }
+  palette.splice(idx, 1);
+  if (selectedIndex >= palette.length) selectedIndex = palette.length - 1;
+  if (palette.length === 0) selectedIndex = -1;
+  viz.hideMask();
+  altMaskActive = false;
+  altMaskIndex = -1;
+  viz.syncPalette(vizPalette());
+  renderSwatches();
+  syncView();
+}
+
 // ── Palette mutations ────────────────────────────────────────────────────────
 
 function addColor(hex: string): void {
@@ -599,6 +651,13 @@ function updateAltMask(): void {
       altMaskActive = true;
       return;
     }
+    // Preview color always gets a fresh mask rebuild since it moves
+    if (previewIndex >= 0) {
+      buildMask(previewIndex);
+      altMaskIndex = previewIndex;
+      altMaskActive = true;
+      return;
+    }
     if (probeEvent) {
       const idx = paletteIndexAtCursor(probeEvent);
       if (
@@ -649,6 +708,23 @@ const DBLCLICK_DIST = 10;
 
 $canvasWrap.addEventListener("pointerdown", (e) => {
   if (e.button !== 0) return;
+
+  // Commit preview on click
+  if (previewIndex >= 0) {
+    commitPreview();
+    // Set up drag so user can adjust the just-committed color
+    pointerState = {
+      x: e.clientX,
+      y: e.clientY,
+      id: e.pointerId,
+      dragging: false,
+      dragIndex: palette.length - 1,
+      moving: true,
+    };
+    $canvasWrap.setPointerCapture(e.pointerId);
+    return;
+  }
+
   const now = performance.now();
   const isDblClick =
     now - lastClickTime < DBLCLICK_MS &&
@@ -710,6 +786,20 @@ function updateCanvasCursor(): void {
 }
 
 $canvasWrap.addEventListener("pointermove", (e) => {
+  // Update preview color while Cmd/Ctrl hovering
+  if (
+    !pointerState &&
+    (e.metaKey || e.ctrlKey) &&
+    e.pointerType !== "touch"
+  ) {
+    const { u, v, inBounds } = getUV(e);
+    if (inBounds) {
+      showPreview(getRawHexAtUV(u, v));
+    } else {
+      cancelPreview();
+    }
+  }
+
   if (e.pointerType === "touch") {
     probeEvent = null;
     hideProbe();
@@ -810,6 +900,7 @@ $canvasWrap.addEventListener("pointercancel", () => {
 $canvasWrap.addEventListener("pointerleave", () => {
   probeEvent = null;
   hideProbe();
+  cancelPreview();
 });
 
 // ── Scroll / touch → adjust position ─────────────────────────────────────────
@@ -913,6 +1004,16 @@ function isTextInput(e: KeyboardEvent): boolean {
 
 document.addEventListener("keydown", (e) => {
   syncModifiers(e);
+  // Start preview if Cmd/Ctrl pressed while cursor is already on canvas
+  if (
+    (e.key === "Meta" || e.key === "Control") &&
+    probeEvent &&
+    !pointerState &&
+    previewIndex < 0
+  ) {
+    const { u, v, inBounds } = getUV(probeEvent);
+    if (inBounds) showPreview(getRawHexAtUV(u, v));
+  }
   stateDidChange();
   if (e.key === "Alt" || (e.key === "Shift" && modifierKeys.alt)) {
     updateAltMask();
@@ -952,6 +1053,13 @@ document.addEventListener("keydown", (e) => {
 
 document.addEventListener("keyup", (e) => {
   syncModifiers(e);
+  if (
+    (e.key === "Meta" || e.key === "Control") &&
+    !modifierKeys.meta &&
+    !modifierKeys.ctrl
+  ) {
+    cancelPreview();
+  }
   stateDidChange();
   if (e.key === "Alt" || (e.key === "Shift" && modifierKeys.alt))
     updateAltMask();
