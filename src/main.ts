@@ -2,33 +2,36 @@
  * PickyPalette — Interaction Model
  * =================================
  *
- * Canvas interactions
+ * Adding colors
+ * -------------
+ * C                   → toggle pick mode (crosshair, next click adds)
+ * Cmd/Ctrl + hover    → preview a new color (click to place)
+ * Cmd/Ctrl + drag     → place previewed color and adjust it live
+ * Double-click        → add a new color (hold to drag-adjust)
+ * Long tap (touch)    → add a new color (hold to drag-adjust)
+ * Empty canvas        → click/drag always adds
+ *
+ * Selecting & editing
  * -------------------
- * Click              → select the closest palette color under the cursor
- * Drag               → move the selected color (relative to its position)
- * Cmd/Ctrl + hover   → preview a new color (click to place)
- * Cmd/Ctrl + drag    → place previewed color and adjust it live
- * Double-click       → add a new color (hold to drag-adjust)
- * Empty canvas       → click/drag always adds
- * Scroll             → adjust the position slider (3rd axis)
- * Long tap (touch)   → add a new color (hold to drag-adjust)
+ * Click               → select the closest palette color under the cursor
+ * Drag                → move the selected color (relative to its position)
+ * 1 / 2 / 3           → switch axis (x / y / z)
+ * Scroll              → adjust the position slider (3rd axis)
  *
- * Modifiers (canvas & swatches)
- * -----------------------------
- * Alt/Option          → reveal raw color space under the hovered region
- * Shift + Alt/Option  → isolate the hovered color (flat region stays,
- *                       rest shows raw color space)
- * Cmd/Ctrl + Alt      → preview color with raw color space reveal
- * Cmd/Ctrl + Alt + Shift → preview color with isolation mask
+ * Inspecting
+ * ----------
+ * P                    → toggle color position markers
+ * Alt/Option           → reveal raw color space under the hovered region
+ * Shift + Alt/Option   → isolate the hovered color (flat region stays,
+ *                        rest shows raw color space)
+ * Cmd/Ctrl + Alt       → preview color with raw color space reveal
+ * Cmd/Ctrl + Alt+Shift → preview color with isolation mask
  *
- * Keyboard
- * --------
- * 1 / 2 / 3          → switch axis (x / y / z)
- * C                  → toggle pick mode (crosshair, next click adds)
- * P                  → toggle color position markers
- * Cmd/Ctrl + Z       → undo
- * Delete / Backspace → remove hovered swatch, color under cursor, or selected
- * Escape             → cancel drag or exit pick mode
+ * Removing & undo
+ * ---------------
+ * Delete / Backspace  → remove hovered swatch, color under cursor, or selected
+ * Cmd/Ctrl + Z        → undo
+ * Escape              → cancel drag or exit pick mode
  *
  * Cursors
  * -------
@@ -769,9 +772,16 @@ const DBLCLICK_DIST = 10;
 $canvasWrap.addEventListener("pointerdown", (e) => {
   if (e.button !== 0) return;
 
-  // Click on a hovered marker: jump slider to that color's slice, then allow drag
-  if (hoveredMarkerIndex >= 0 && !pickMode) {
-    const idx = hoveredMarkerIndex;
+  // Tap on a marker (touch): jump slider to that color's slice
+  const touchMarker =
+    e.pointerType === "touch" && showMarkers && !pickMode
+      ? hitTestMarker(e.clientX, e.clientY)
+      : null;
+
+  // Click on a hovered marker (mouse) or tapped marker (touch)
+  const markerIdx = touchMarker ? touchMarker.paletteIndex : hoveredMarkerIndex;
+  if (markerIdx >= 0 && !pickMode) {
+    const idx = markerIdx;
     const hex = palette[idx];
     const sliderVal = getSliderValue(
       hex,

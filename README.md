@@ -8,22 +8,22 @@ A color picker where you sculpt a palette directly on a color model. Colors clai
 
 | Input                                                 | Action                                            |
 | ----------------------------------------------------- | ------------------------------------------------- |
-| Click                                                 | Select the closest color under cursor             |
-| Drag                                                  | Move the selected color                           |
+| <kbd>C</kbd>                                          | Toggle pick mode (next click adds)                |
 | <kbd>Cmd</kbd> / <kbd>Ctrl</kbd> + hover              | Preview a new color (click to place)              |
 | Double-click                                          | Add a new color (hold to drag-adjust)             |
-| <kbd>1</kbd> / <kbd>2</kbd> / <kbd>3</kbd>             | Switch axis (x / y / z)                           |
-| <kbd>C</kbd>                                          | Toggle pick mode (next click adds)                |
+| Long tap (touch)                                      | Add a new color (hold to drag-adjust)             |
+| Click                                                 | Select the closest color under cursor             |
+| Drag                                                  | Move the selected color                           |
+| <kbd>1</kbd> / <kbd>2</kbd> / <kbd>3</kbd>            | Switch axis (x / y / z)                           |
+| Scroll                                                | Adjust position slider (3rd axis)                 |
 | <kbd>P</kbd>                                          | Toggle color position markers                     |
-| <kbd>Cmd</kbd> / <kbd>Ctrl</kbd> + <kbd>Z</kbd>       | Undo                                              |
-| <kbd>Delete</kbd> / <kbd>Backspace</kbd>              | Remove hovered swatch, cursor color, or selected  |
-| <kbd>Esc</kbd>                                        | Cancel drag or exit pick mode                     |
 | <kbd>Alt</kbd> / <kbd>Option</kbd>                    | Reveal raw color space under hovered region       |
 | <kbd>Shift</kbd> + <kbd>Alt</kbd> / <kbd>Option</kbd> | Isolate color (flat region stays, rest shows raw) |
 | <kbd>Cmd</kbd> + <kbd>Alt</kbd>                       | Preview color with raw color space reveal         |
 | <kbd>Cmd</kbd> + <kbd>Alt</kbd> + <kbd>Shift</kbd>    | Preview color with isolation mask                 |
-| Scroll                                                | Adjust position slider (3rd axis)                 |
-| Long tap (touch)                                      | Add a new color (hold to drag-adjust)             |
+| <kbd>Delete</kbd> / <kbd>Backspace</kbd>              | Remove hovered swatch, cursor color, or selected  |
+| <kbd>Cmd</kbd> / <kbd>Ctrl</kbd> + <kbd>Z</kbd>       | Undo                                              |
+| <kbd>Esc</kbd>                                        | Cancel drag or exit pick mode                     |
 
 - Dragging moves the color relative to its position (no snapping to cursor).
 - An empty canvas treats any click/drag as adding a color.
