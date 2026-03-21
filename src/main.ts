@@ -1030,6 +1030,11 @@ document.addEventListener("keydown", (e) => {
     setPickMode(!pickMode);
   }
   if (e.key === "Delete" || e.key === "Backspace") {
+    if (hoveredSwatch) {
+      e.preventDefault();
+      removeColor(hoveredSwatch.index);
+      return;
+    }
     if (probeEvent) {
       const idx = paletteIndexAtCursor(probeEvent);
       if (idx >= 0) {
