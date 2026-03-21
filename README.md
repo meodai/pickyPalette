@@ -12,7 +12,9 @@ A color picker where you sculpt a palette directly on a color model. Colors clai
 | Drag                                                  | Move the selected color                           |
 | <kbd>Cmd</kbd> / <kbd>Ctrl</kbd> + hover              | Preview a new color (click to place)              |
 | Double-click                                          | Add a new color (hold to drag-adjust)             |
+| <kbd>1</kbd> / <kbd>2</kbd> / <kbd>3</kbd>             | Switch axis (x / y / z)                           |
 | <kbd>C</kbd>                                          | Toggle pick mode (next click adds)                |
+| <kbd>P</kbd>                                          | Toggle color position markers                     |
 | <kbd>Cmd</kbd> / <kbd>Ctrl</kbd> + <kbd>Z</kbd>       | Undo                                              |
 | <kbd>Delete</kbd> / <kbd>Backspace</kbd>              | Remove hovered swatch, cursor color, or selected  |
 | <kbd>Esc</kbd>                                        | Cancel drag or exit pick mode                     |
@@ -47,6 +49,7 @@ A color picker where you sculpt a palette directly on a color model. Colors clai
 | Reveal Color Space While Picking | Shows raw color space in the new color's region during Cmd+drag       |
 | Clip to sRGB                     | Hides out-of-gamut colors (only affects wide-gamut models)            |
 | Auto-Sort Color Swatches         | ML-trained sorting of swatches by visual similarity                   |
+| Show Color Markers (P)           | Dots showing where each color sits on the canvas, sized by proximity  |
 
 ## Development
 
@@ -71,7 +74,7 @@ npx tsc --noEmit # type check (strict mode)
 
 - [ ] Wide-gamut color support — use `getColorAtUV_float()` (palette-shader 0.18.0) for unclamped linear RGB, enabling out-of-sRGB colors
 - [ ] Better swatch management — list view, auto-sort and sort options in the swatch panel
-- [ ] Color position markers — overlay canvas showing dots where palette colors sit, with contrast-aware color (black/white)
+- [x] Color position markers — overlay canvas showing dots where palette colors sit, with contrast-aware color (black/white)
 
 ## License
 

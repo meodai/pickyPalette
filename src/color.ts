@@ -209,11 +209,111 @@ export function getSliderValue(
 
   const val = color[sliderComp] ?? 0;
   const [min, max] = range;
-  return Math.max(0, Math.min(1, (val - min) / (max - min)));
+  let norm = Math.max(0, Math.min(1, (val - min) / (max - min)));
+  // Shader inverts progress for z-axis always, and y-axis in polar models
+  const isPolar = POLAR_MODELS.has(colorModel);
+  if (axis === "z" || (isPolar && axis === "y")) norm = 1 - norm;
+  return norm;
 }
 
 export function isHueAxis(colorModel: string, axis: Axis): boolean {
   const names = AXIS_NAMES[colorModel] || ["X", "Y", "Z"];
   const axisIdx = AXES.indexOf(axis);
   return names[axisIdx] === "H";
+}
+
+// Polar color models use a circular UV mapping in the shader
+const POLAR_MODELS = new Set([
+  "okhslPolar",
+  "okhsvPolar",
+  "oklchPolar",
+  "oklrchPolar",
+  "hslPolar",
+  "hsvPolar",
+  "hwbPolar",
+  "cielchPolar",
+  "cielchD50Polar",
+  "cam16ucsD65Polar",
+]);
+
+/**
+ * Get the UV canvas position and slider-axis distance for a hex color.
+ * Returns { u, v, sliderDist } where u/v are 0–1 canvas coordinates
+ * and sliderDist is the absolute distance (0–1) from the current slider position.
+ * Returns null if conversion fails.
+ *
+ * This reverses the shader's UV → colorCoords mapping defined in shaderSrc.ts.
+ */
+export function getColorUV(
+  hex: string,
+  colorModel: string,
+  axis: Axis,
+  sliderPos: number,
+): { u: number; v: number; sliderDist: number } | null {
+  const culoriMode = SLIDER_CULORI_MODE[colorModel];
+  if (!culoriMode) return null;
+  const comps = SLIDER_COMPONENTS[culoriMode];
+  const ranges = SLIDER_RANGES[culoriMode];
+  if (!comps || !ranges) return null;
+
+  const convert = converter(culoriMode as any);
+  const color = convert(hex) as Record<string, any> | undefined;
+  if (!color) return null;
+
+  // Normalize all three components to 0–1
+  const norm: number[] = comps.map((c) => {
+    const val = color[c] ?? 0;
+    const [min, max] = ranges[c];
+    return (val - min) / (max - min);
+  });
+
+  const axisIdx = AXES.indexOf(axis);
+  const isPolar = POLAR_MODELS.has(colorModel);
+
+  // Compute slider distance
+  // Shader inverts progress for: z-axis always, y-axis in polar models
+  let sliderNorm = norm[axisIdx];
+  if (axis === "z" || (isPolar && axis === "y")) sliderNorm = 1 - sliderNorm;
+  const sliderDist = Math.abs(sliderNorm - sliderPos);
+
+  let u: number;
+  let v: number;
+
+  if (isPolar && axisIdx !== 0) {
+    // Polar disc: shader maps UV via atan2/length
+    //   toCenter = uv - 0.5
+    //   angle = atan(toCenter.y, toCenter.x)
+    //   radius = length(toCenter) * 2
+    // colorCoords.x = angle / TWO_PI (hue)
+    // The other non-slider component = radius
+    const hueNorm = norm[0]; // comps[0] is always hue in polar models
+    const radiusIdx = axisIdx === 1 ? 2 : 1;
+    const radius = norm[radiusIdx];
+    // Shader: angle = atan(toCenter.y, toCenter.x) → [-PI, PI]
+    // Then colorCoords.x = angle / TWO_PI → [-0.5, 0.5]
+    // Culori hue 0–360 → hueNorm 0–1
+    // Reverse: angle = hueNorm * TWO_PI
+    const angle = hueNorm * Math.PI * 2;
+    u = Math.cos(angle) * radius * 0.5 + 0.5;
+    v = Math.sin(angle) * radius * 0.5 + 0.5;
+  } else if (!isPolar) {
+    // Non-polar: straightforward linear mapping
+    // Shader: PROGRESS_AXIS=0 → (progress, uv.x, uv.y)
+    //         PROGRESS_AXIS=1 → (uv.x, progress, uv.y)
+    //         PROGRESS_AXIS=2 → (uv.x, uv.y, 1-progress)
+    const xIdx = axisIdx === 0 ? 1 : 0;
+    const yIdx = axisIdx <= 1 ? 2 : 1;
+    u = norm[xIdx];
+    v = norm[yIdx];
+  } else {
+    // Polar with axis=x (hue on slider): non-disc layout, skip for now
+    u = norm[1];
+    v = norm[2];
+  }
+
+  return {
+    u: Math.max(0, Math.min(1, u)),
+    v: Math.max(0, Math.min(1, v)),
+    sliderDist,
+  };
 }

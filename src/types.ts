@@ -12,4 +12,5 @@ export interface HashState {
   reveal: boolean;
   gamut: boolean;
   autoSort: boolean;
+  markers: boolean;
 }

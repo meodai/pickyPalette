@@ -71,8 +71,16 @@
       <h2>Keys &amp; Shortcuts</h2>
       <table class="picker__keys">
         <tr>
+          <td><kbd>1</kbd> / <kbd>2</kbd> / <kbd>3</kbd></td>
+          <td>Switch axis (x / y / z)</td>
+        </tr>
+        <tr>
           <td><kbd>C</kbd></td>
           <td>Toggle pick mode (add color on next click)</td>
+        </tr>
+        <tr>
+          <td><kbd>P</kbd></td>
+          <td>Toggle color position markers</td>
         </tr>
         <tr>
           <td><kbd>Cmd</kbd> / <kbd>Ctrl</kbd> + hover</td>
@@ -223,6 +231,16 @@
           screen. Only has an effect on color models that go beyond sRGB — like
           OKLab, OKLCH, or CIELab. Models that are inherently bound to sRGB
           (HSL, HSV, RGB) are unaffected.
+        </p>
+      </details>
+      <details class="picker__manual">
+        <summary>Color Markers</summary>
+        <p>
+          Toggle with <kbd>P</kbd> or via the settings checkbox. Shows dots on
+          the canvas where each palette color sits. Dots are sized by how close
+          the color is to the current slider position — closer colors appear
+          larger. Hover a dot for 500ms to highlight it, then click to jump the
+          slider to that color's slice.
         </p>
       </details>
       <details class="picker__manual">

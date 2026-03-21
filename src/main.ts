@@ -21,7 +21,9 @@
  *
  * Keyboard
  * --------
+ * 1 / 2 / 3          → switch axis (x / y / z)
  * C                  → toggle pick mode (crosshair, next click adds)
+ * P                  → toggle color position markers
  * Cmd/Ctrl + Z       → undo
  * Delete / Backspace → remove hovered swatch, color under cursor, or selected
  * Escape             → cancel drag or exit pick mode
@@ -86,7 +88,7 @@ import {
   getSliderValue,
 } from "./color";
 import { createControls } from "./controls";
-import { createVizManager } from "./viz";
+import { createVizManager, type MarkerInfo } from "./viz";
 import { createSortManager } from "./sort";
 import { createBeamManager } from "./beam";
 import { encodeHash, decodeHash } from "./hash";
@@ -140,6 +142,36 @@ let palette: string[] = [];
 let selectedIndex = -1;
 let sortedPalette: string[] | null = null;
 let pickMode = false;
+let showMarkers = false;
+let hoveredMarkerIndex = -1;
+let markerHoverTimer: ReturnType<typeof setTimeout> | null = null;
+
+function clearMarkerHover(): void {
+  if (markerHoverTimer !== null) {
+    clearTimeout(markerHoverTimer);
+    markerHoverTimer = null;
+  }
+  if (hoveredMarkerIndex >= 0) {
+    hoveredMarkerIndex = -1;
+    refreshMarkers();
+  }
+}
+
+function hitTestMarker(clientX: number, clientY: number): MarkerInfo | null {
+  if (!showMarkers) return null;
+  const rect = $canvasWrap.getBoundingClientRect();
+  const cx = clientX - rect.left;
+  const cy = clientY - rect.top;
+  const hitPad = 4; // extra pixels for easier targeting
+  for (const m of viz.getMarkers()) {
+    const dx = cx - m.cssX;
+    const dy = cy - m.cssY;
+    if (dx * dx + dy * dy <= (m.radius + hitPad) * (m.radius + hitPad)) {
+      return m;
+    }
+  }
+  return null;
+}
 const modifierKeys = { meta: false, ctrl: false, alt: false, shift: false };
 let hoveredSwatch: { hex: string; index: number } | null = null;
 
@@ -259,8 +291,21 @@ function stateDidChange(): void {
   updateSwatchHover();
 }
 
+function refreshMarkers(): void {
+  if (showMarkers) viz.drawMarkers(palette, hoveredMarkerIndex);
+}
+
+function toggleMarkers(force?: boolean): void {
+  showMarkers = force ?? !showMarkers;
+  controls.$markersCheckbox.checked = showMarkers;
+  viz.setMarkersVisible(showMarkers);
+  refreshMarkers();
+  scheduleHashUpdate();
+}
+
 function refreshView(): void {
   syncView();
+  refreshMarkers();
   scheduleHashUpdate();
   scheduleFaviconUpdate();
   stateDidChange();
@@ -271,6 +316,7 @@ function refresh(): void {
   renderSwatches();
   syncPasteField();
   syncView();
+  refreshMarkers();
   scheduleHashUpdate();
   beam.sendPalette();
   scheduleFaviconUpdate();
@@ -304,6 +350,7 @@ function scheduleHashUpdate(): void {
         reveal: controls.$revealCheckbox.checked,
         gamut: controls.$gamutClipCheckbox.checked,
         autoSort: controls.$autoSortCheckbox.checked,
+        markers: showMarkers,
       }),
     );
   }, 400);
@@ -549,6 +596,15 @@ function setPickMode(active: boolean): void {
   $addLabel.innerHTML = active
     ? "<kbd>C</kbd> Cancel pick"
     : "<kbd>C</kbd> Add color";
+  // Always show markers in pick mode, restore user setting when leaving
+  if (active) {
+    viz.setMarkersVisible(true);
+    viz.drawMarkers(palette);
+  } else {
+    viz.setMarkersVisible(showMarkers);
+    refreshMarkers();
+  }
+  clearMarkerHover();
   syncView();
   stateDidChange();
 }
@@ -709,6 +765,35 @@ const DBLCLICK_DIST = 10;
 $canvasWrap.addEventListener("pointerdown", (e) => {
   if (e.button !== 0) return;
 
+  // Click on a hovered marker: jump slider to that color's slice, then allow drag
+  if (hoveredMarkerIndex >= 0 && !pickMode) {
+    const idx = hoveredMarkerIndex;
+    const hex = palette[idx];
+    const sliderVal = getSliderValue(
+      hex,
+      controls.$colorModel.value,
+      controls.axis,
+    );
+    if (sliderVal !== null) {
+      controls.$posSlider.value = String(sliderVal);
+      viz.setPosition(sliderVal);
+    }
+    selectColor(idx);
+    clearMarkerHover();
+    refreshView();
+    // Set up drag so the user can immediately move the color
+    pointerState = {
+      x: e.clientX,
+      y: e.clientY,
+      id: e.pointerId,
+      dragging: false,
+      dragIndex: idx,
+      moving: true,
+    };
+    $canvasWrap.setPointerCapture(e.pointerId);
+    return;
+  }
+
   // Commit preview on click
   if (previewIndex >= 0) {
     commitPreview();
@@ -811,6 +896,28 @@ $canvasWrap.addEventListener("pointermove", (e) => {
   updateCanvasCursor();
   updateAltMask();
 
+  // Marker hover detection (disabled in pick mode — markers are display-only)
+  if (!pointerState && !pickMode && showMarkers && e.pointerType !== "touch") {
+    const hit = hitTestMarker(e.clientX, e.clientY);
+    const hitIdx = hit ? hit.paletteIndex : -1;
+    if (hitIdx !== hoveredMarkerIndex) {
+      if (markerHoverTimer !== null) {
+        clearTimeout(markerHoverTimer);
+        markerHoverTimer = null;
+      }
+      if (hitIdx >= 0) {
+        markerHoverTimer = setTimeout(() => {
+          markerHoverTimer = null;
+          hoveredMarkerIndex = hitIdx;
+          refreshMarkers();
+        }, 500);
+      } else {
+        hoveredMarkerIndex = -1;
+        refreshMarkers();
+      }
+    }
+  }
+
   if (!pointerState || pointerState.id !== e.pointerId) return;
   const dx = e.clientX - pointerState.x;
   const dy = e.clientY - pointerState.y;
@@ -836,6 +943,7 @@ $canvasWrap.addEventListener("pointermove", (e) => {
     const { u, v, inBounds } = getUV(e);
     if (inBounds || pointerState.moving) {
       liveUpdateColor(pointerState.dragIndex, getRawHexAtUV(u, v));
+      refreshMarkers();
       if (!pointerState.moving && dragMaskRAF === null) {
         const idx = pointerState.dragIndex;
         dragMaskRAF = requestAnimationFrame(() => {
@@ -901,6 +1009,7 @@ $canvasWrap.addEventListener("pointerleave", () => {
   probeEvent = null;
   hideProbe();
   cancelPreview();
+  clearMarkerHover();
 });
 
 // ── Scroll / touch → adjust position ─────────────────────────────────────────
@@ -1025,9 +1134,18 @@ document.addEventListener("keydown", (e) => {
     undo();
     return;
   }
+  // Don't intercept browser shortcuts (Cmd/Ctrl + key)
+  if (e.metaKey || e.ctrlKey) return;
+  if (e.key === "1") { controls.setAxis("x"); }
+  if (e.key === "2") { controls.setAxis("y"); }
+  if (e.key === "3") { controls.setAxis("z"); }
   if (e.key === "c" || e.key === "C") {
     e.preventDefault();
     setPickMode(!pickMode);
+  }
+  if (e.key === "p" || e.key === "P") {
+    e.preventDefault();
+    toggleMarkers();
   }
   if (e.key === "Delete" || e.key === "Backspace") {
     if (hoveredSwatch) {
@@ -1115,6 +1233,10 @@ controls.$autoSortCheckbox.addEventListener("change", () => {
   scheduleHashUpdate();
 });
 
+controls.$markersCheckbox.addEventListener("change", () => {
+  toggleMarkers(controls.$markersCheckbox.checked);
+});
+
 // ── Resize ───────────────────────────────────────────────────────────────────
 
 const resizeObserver = new ResizeObserver((entries) => {
@@ -1152,6 +1274,7 @@ function applyHashState(state: HashState): void {
 
   controls.setAxis(state.axis);
   controls.updateLabels();
+  toggleMarkers(state.markers);
   renderSwatches();
   syncView();
   requestAutoSort();

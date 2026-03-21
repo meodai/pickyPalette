@@ -563,6 +563,12 @@ input[type="range"]::-moz-range-thumb {
   pointer-events: none;
 }
 
+.picker__canvas-wrap canvas.markers-canvas {
+  image-rendering: auto;
+  z-index: 5;
+  pointer-events: none;
+}
+
 /* ── Position slider ───────────────────────────────────────────────────── */
 
 .picker__slider {

@@ -9,6 +9,7 @@ export interface Controls {
   $revealCheckbox: HTMLInputElement;
   $gamutClipCheckbox: HTMLInputElement;
   $autoSortCheckbox: HTMLInputElement;
+  $markersCheckbox: HTMLInputElement;
   $posSlider: HTMLInputElement;
   $sliderCell: HTMLDivElement;
 
@@ -152,6 +153,15 @@ export function createControls(
   const $revealCheckbox = checkbox("Reveal Color Space While Picking", true);
   const $gamutClipCheckbox = checkbox("Clip to sRGB", false);
   const $autoSortCheckbox = checkbox("Auto-Sort Color Swatches", true);
+  const $markersCheckbox = document.createElement("input");
+  $markersCheckbox.type = "checkbox";
+  $markersCheckbox.checked = false;
+  const $markersLabel = document.createElement("label");
+  const $markersSpan = document.createElement("span");
+  $markersSpan.innerHTML = "Show Color Markers <kbd>P</kbd>";
+  $markersLabel.appendChild($markersSpan);
+  $markersLabel.appendChild($markersCheckbox);
+  appendSetting($markersLabel);
 
   // ── Position slider ────────────────────────────────────────────────
   const $posSlider = document.createElement("input");
@@ -217,6 +227,7 @@ export function createControls(
     $revealCheckbox,
     $gamutClipCheckbox,
     $autoSortCheckbox,
+    $markersCheckbox,
     $posSlider,
     $sliderCell: $sliderCell as HTMLDivElement,
 

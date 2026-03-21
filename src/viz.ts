@@ -1,9 +1,23 @@
 import { PaletteViz } from "palette-shader";
 import { wcagContrast } from "culori";
 import type { RGB, Axis } from "./types";
-import { hexToRGB } from "./color";
+import { hexToRGB, getColorUV } from "./color";
 
 const DUMMY_PALETTE: RGB[] = [[0.5, 0.5, 0.5]];
+
+export interface MarkerInfo {
+  hex: string;
+  paletteIndex: number;
+  /** Canvas pixel X (top-left origin) */
+  px: number;
+  /** Canvas pixel Y (top-left origin) */
+  py: number;
+  /** CSS pixel X relative to canvas-wrap */
+  cssX: number;
+  /** CSS pixel Y relative to canvas-wrap */
+  cssY: number;
+  radius: number;
+}
 
 export interface VizManager {
   readonly vizRaw: PaletteViz;
@@ -24,6 +38,10 @@ export interface VizManager {
 
   highlightRegion(hex: string): void;
   hideHighlight(): void;
+
+  drawMarkers(palette: string[], hoveredIndex?: number): void;
+  setMarkersVisible(visible: boolean): void;
+  getMarkers(): MarkerInfo[];
 
   setAxis(axis: Axis): void;
   setPosition(pos: number): void;
@@ -77,6 +95,14 @@ export function createVizManager($canvasWrap: HTMLElement): VizManager {
   highlightCanvas.style.display = "none";
   const highlightCtx = highlightCanvas.getContext("2d")!;
   $canvasWrap.appendChild(highlightCanvas);
+
+  // Markers overlay for color position dots
+  const markersCanvas = document.createElement("canvas");
+  markersCanvas.className = "markers-canvas";
+  markersCanvas.style.display = "none";
+  const markersCtx = markersCanvas.getContext("2d")!;
+  $canvasWrap.appendChild(markersCanvas);
+  let markersVisible = false;
 
   function ensureVizClosest(vizPalette: RGB[]): PaletteViz | null {
     if (vizClosest) return vizClosest;
@@ -266,6 +292,68 @@ export function createVizManager($canvasWrap: HTMLElement): VizManager {
     highlightCanvas.style.display = "none";
   }
 
+  let currentMarkers: MarkerInfo[] = [];
+
+  function drawMarkers(palette: string[], hoveredIndex = -1): void {
+    const w = vizRaw.canvas.width;
+    const h = vizRaw.canvas.height;
+    markersCanvas.width = w;
+    markersCanvas.height = h;
+    markersCtx.clearRect(0, 0, w, h);
+    currentMarkers = [];
+
+    if (!markersVisible || palette.length === 0) {
+      markersCanvas.style.display = "none";
+      return;
+    }
+
+    const minR = 3 * pixelRatio;
+    const maxR = 6 * pixelRatio;
+    const hoverGrow = 6 * pixelRatio;
+
+    for (let i = 0; i < palette.length; i++) {
+      const hex = palette[i];
+      const pos = getColorUV(hex, currentColorModel, currentAxis, currentPosition);
+      if (!pos) continue;
+
+      const proximity = 1 - Math.min(1, pos.sliderDist * 2);
+      let r = minR + proximity * (maxR - minR);
+      if (i === hoveredIndex) r += hoverGrow;
+
+      const px = pos.u * w;
+      const py = (1 - pos.v) * h;
+
+      currentMarkers.push({
+        hex,
+        paletteIndex: i,
+        px,
+        py,
+        cssX: px / pixelRatio,
+        cssY: py / pixelRatio,
+        radius: r / pixelRatio,
+      });
+
+      const stroke =
+        wcagContrast(hex, "white") > wcagContrast(hex, "black")
+          ? "white"
+          : "black";
+
+      markersCtx.beginPath();
+      markersCtx.arc(px, py, r, 0, Math.PI * 2);
+      markersCtx.fillStyle = hex;
+      markersCtx.fill();
+      markersCtx.lineWidth = 0.75 * pixelRatio;
+      markersCtx.strokeStyle = stroke;
+      markersCtx.stroke();
+    }
+    markersCanvas.style.display = "";
+  }
+
+  function setMarkersVisible(visible: boolean): void {
+    markersVisible = visible;
+    if (!visible) markersCanvas.style.display = "none";
+  }
+
   function updateView(pickMode: boolean, hasColors: boolean): void {
     if (pickMode) {
       vizRaw.canvas.style.zIndex = "2";
@@ -300,6 +388,12 @@ export function createVizManager($canvasWrap: HTMLElement): VizManager {
     hideMask,
     highlightRegion,
     hideHighlight,
+
+    drawMarkers,
+    setMarkersVisible,
+    getMarkers() {
+      return currentMarkers;
+    },
 
     setAxis(axis: Axis) {
       currentAxis = axis;
