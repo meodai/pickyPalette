@@ -249,9 +249,18 @@
       <details class="picker__manual">
         <summary>Ease to Current Slice</summary>
         <p>
-          When enabled, dragging a color gradually blends its 3rd axis value
-          toward the current slider position. The further you drag, the more it
-          eases in. When off, the color immediately snaps to the current slice.
+          The canvas only shows two axes at a time — the third is controlled by
+          the slider. When you drag a color, it may not sit on the slice you're
+          currently viewing. With this option on, the color's hidden axis
+          gradually blends toward the current slider position as you drag
+          further from the starting point. A short drag keeps the original
+          value; a longer drag eases the color onto the visible slice.
+          The interpolation happens in the same color space as the current
+          model, so transitions feel perceptually smooth.
+        </p>
+        <p>
+          When off, dragging always places the color exactly on the current
+          slice — the old behavior.
         </p>
       </details>
       <details class="picker__manual">
