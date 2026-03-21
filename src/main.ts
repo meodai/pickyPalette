@@ -95,6 +95,7 @@ import {
   getSliderValue,
   setSliderAxis,
   SLIDER_CULORI_MODE,
+  POLAR_MODELS,
 } from "./color";
 import { createControls } from "./controls";
 import { createVizManager, type MarkerInfo } from "./viz";
@@ -1005,8 +1006,48 @@ $canvasWrap.addEventListener("pointermove", (e) => {
   if (pointerState.dragging && pointerState.dragIndex >= 0) {
     const { u, v, inBounds } = getUV(e);
     if (inBounds || pointerState.moving) {
-      const cu = Math.max(0, Math.min(1, u));
-      const cv = Math.max(0, Math.min(1, v));
+      let cu: number, cv: number;
+      if (POLAR_MODELS.has(controls.$colorModel.value)) {
+        // Clamp to unit disc centered at (0.5, 0.5)
+        const dx = u - 0.5;
+        const dy = v - 0.5;
+        const len = Math.hypot(dx, dy);
+        const maxR = 0.498; // slightly inside to avoid edge jitter
+        if (len > maxR) {
+          const scale = maxR / len;
+          cu = 0.5 + dx * scale;
+          cv = 0.5 + dy * scale;
+        } else {
+          cu = u;
+          cv = v;
+        }
+      } else {
+        cu = Math.max(0, Math.min(1, u));
+        cv = Math.max(0, Math.min(1, v));
+      }
+      // When gamut clip is on, pull inward if the color is out of gamut (black)
+      if (controls.$gamutClipCheckbox.checked) {
+        const testRGB = viz.getRawColorAtUV(cu, cv);
+        if (testRGB[0] + testRGB[1] + testRGB[2] < 0.01) {
+          let lo = 0,
+            hi = 1;
+          const cx = 0.5,
+            cy = 0.5;
+          for (let i = 0; i < 8; i++) {
+            const mid = (lo + hi) / 2;
+            const mu = cx + (cu - cx) * mid;
+            const mv = cy + (cv - cy) * mid;
+            const rgb = viz.getRawColorAtUV(mu, mv);
+            if (rgb[0] + rgb[1] + rgb[2] < 0.01) {
+              hi = mid;
+            } else {
+              lo = mid;
+            }
+          }
+          cu = cx + (cu - cx) * lo;
+          cv = cy + (cv - cy) * lo;
+        }
+      }
       const sliceHex = getRawHexAtUV(cu, cv);
       let hex: string;
       if (pointerState.moving && controls.$snapAxisCheckbox.checked) {

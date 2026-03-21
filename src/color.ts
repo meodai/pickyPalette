@@ -269,7 +269,7 @@ export function isHueAxis(colorModel: string, axis: Axis): boolean {
 }
 
 // Polar color models use a circular UV mapping in the shader
-const POLAR_MODELS = new Set([
+export const POLAR_MODELS = new Set([
   "okhslPolar",
   "okhsvPolar",
   "oklchPolar",
