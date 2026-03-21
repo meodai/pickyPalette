@@ -12,7 +12,7 @@ The canvas maps a color space onto a plane — as you add colors, it splits into
 | ----------------------------------------------------- | ------------------------------------------------- |
 | Click                                                 | Select the closest color under cursor             |
 | Drag                                                  | Move the selected color                           |
-| <kbd>Cmd</kbd> / <kbd>Ctrl</kbd> + click              | Add a new color                                   |
+| <kbd>Cmd</kbd> / <kbd>Ctrl</kbd> + hover              | Preview a new color (click to place)              |
 | Double-click                                          | Add a new color (hold to drag-adjust)             |
 | <kbd>C</kbd>                                          | Toggle pick mode (next click adds)                |
 | <kbd>Cmd</kbd> / <kbd>Ctrl</kbd> + <kbd>Z</kbd>       | Undo                                              |
@@ -71,4 +71,4 @@ npx tsc --noEmit # type check (strict mode)
 
 ## License
 
-MIT
+[PolyForm Noncommercial 1.0.0](LICENSE) — free for non-commercial use. For commercial licensing, contact [money@elastiq.ch](mailto:money@elastiq.ch).

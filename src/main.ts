@@ -6,8 +6,8 @@
  * -------------------
  * Click              → select the closest palette color under the cursor
  * Drag               → move the selected color (relative to its position)
- * Cmd/Ctrl + click   → add a new color
- * Cmd/Ctrl + drag    → add a new color and adjust it live
+ * Cmd/Ctrl + hover   → preview a new color (click to place)
+ * Cmd/Ctrl + drag    → place previewed color and adjust it live
  * Double-click       → add a new color (hold to drag-adjust)
  * Empty canvas       → click/drag always adds
  * Scroll             → adjust the position slider (3rd axis)
