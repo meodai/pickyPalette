@@ -9,7 +9,6 @@ export interface HashState {
   axis: Axis;
   pos: number;
   outline: boolean;
-  reveal: boolean;
   gamut: boolean;
   autoSort: boolean;
   markers: boolean;

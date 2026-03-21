@@ -6,7 +6,6 @@ export interface Controls {
   $colorModel: HTMLSelectElement;
   $distanceMetric: HTMLSelectElement;
   $outlineCheckbox: HTMLInputElement;
-  $revealCheckbox: HTMLInputElement;
   $gamutClipCheckbox: HTMLInputElement;
   $autoSortCheckbox: HTMLInputElement;
   $markersCheckbox: HTMLInputElement;
@@ -150,7 +149,6 @@ export function createControls(
   }
 
   const $outlineCheckbox = checkbox("Outline", false);
-  const $revealCheckbox = checkbox("Reveal Color Space While Picking", true);
   const $gamutClipCheckbox = checkbox("Clip to sRGB", false);
   const $autoSortCheckbox = checkbox("Auto-Sort Color Swatches", true);
   const $markersCheckbox = document.createElement("input");
@@ -224,7 +222,6 @@ export function createControls(
     $colorModel,
     $distanceMetric,
     $outlineCheckbox,
-    $revealCheckbox,
     $gamutClipCheckbox,
     $autoSortCheckbox,
     $markersCheckbox,

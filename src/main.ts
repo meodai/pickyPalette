@@ -347,7 +347,6 @@ function scheduleHashUpdate(): void {
         axis: controls.axis,
         pos: parseFloat(controls.$posSlider.value),
         outline: controls.$outlineCheckbox.checked,
-        reveal: controls.$revealCheckbox.checked,
         gamut: controls.$gamutClipCheckbox.checked,
         autoSort: controls.$autoSortCheckbox.checked,
         markers: showMarkers,
@@ -690,7 +689,6 @@ function cancelDrag(): void {
 }
 
 function buildMask(colorIndex: number): void {
-  if (!controls.$revealCheckbox.checked) return;
   if (colorIndex < 0 || colorIndex >= palette.length) return;
   viz.compositeMask(palette[colorIndex], "raw", "closest");
 }
@@ -1215,8 +1213,6 @@ controls.$outlineCheckbox.addEventListener("change", () => {
   scheduleHashUpdate();
 });
 
-controls.$revealCheckbox.addEventListener("change", () => scheduleHashUpdate());
-
 controls.$gamutClipCheckbox.addEventListener("change", () => {
   viz.setGamutClip(controls.$gamutClipCheckbox.checked);
   scheduleHashUpdate();
@@ -1257,7 +1253,6 @@ function applyHashState(state: HashState): void {
   controls.$distanceMetric.value = state.distanceMetric;
   controls.$posSlider.value = String(state.pos);
   controls.$outlineCheckbox.checked = state.outline;
-  controls.$revealCheckbox.checked = state.reveal;
   controls.$gamutClipCheckbox.checked = state.gamut;
   controls.$autoSortCheckbox.checked = state.autoSort;
 
