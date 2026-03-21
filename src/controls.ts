@@ -5,7 +5,6 @@ import { AXIS_NAMES, computeSliderStops } from "./color";
 export interface Controls {
   $colorModel: HTMLSelectElement;
   $distanceMetric: HTMLSelectElement;
-  $outlineCheckbox: HTMLInputElement;
   $gamutClipCheckbox: HTMLInputElement;
   $autoSortCheckbox: HTMLInputElement;
   $markersCheckbox: HTMLInputElement;
@@ -167,7 +166,6 @@ export function createControls(
     return $cb;
   }
 
-  const $outlineCheckbox = checkbox("Outline", false);
   const $gamutClipCheckbox = checkbox("Clip to sRGB", false);
   const $autoSortCheckbox = checkbox("Auto-Sort Color Swatches", true);
   const $markersCheckbox = document.createElement("input");
@@ -251,7 +249,6 @@ export function createControls(
   const controls: Controls = {
     $colorModel,
     $distanceMetric,
-    $outlineCheckbox,
     $gamutClipCheckbox,
     $autoSortCheckbox,
     $markersCheckbox,

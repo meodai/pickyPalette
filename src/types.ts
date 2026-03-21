@@ -8,7 +8,6 @@ export interface HashState {
   distanceMetric: string;
   axis: Axis;
   pos: number;
-  outline: boolean;
   gamut: boolean;
   autoSort: boolean;
   markers: boolean;

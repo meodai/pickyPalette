@@ -6,7 +6,6 @@ export interface HashInput {
   distanceMetric: string;
   axis: Axis;
   pos: number;
-  outline: boolean;
   gamut: boolean;
   autoSort: boolean;
   markers: boolean;
@@ -24,7 +23,6 @@ export function encodeHash(s: HashInput): string {
     metric: s.distanceMetric,
     axis: s.axis,
     pos: s.pos.toFixed(4),
-    ...(s.outline && { outline: "1" }),
     ...(s.gamut && { gamut: "1" }),
     ...(!s.autoSort && { sort: "0" }),
     ...(s.markers && { markers: "1" }),
@@ -66,7 +64,6 @@ export function decodeHash(hash: string): HashState | null {
     distanceMetric: params.get("metric") || "oklab",
     axis: (axis === "x" || axis === "y" || axis === "z" ? axis : "y") as Axis,
     pos: parseFloat(params.get("pos") ?? "0.5"),
-    outline: params.get("outline") === "1",
     gamut: params.get("gamut") === "1",
     autoSort: params.get("sort") !== "0",
     markers: params.get("markers") === "1",

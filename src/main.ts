@@ -378,7 +378,6 @@ function scheduleHashUpdate(): void {
         distanceMetric: controls.$distanceMetric.value,
         axis: controls.axis,
         pos: parseFloat(controls.$posSlider.value),
-        outline: controls.$outlineCheckbox.checked,
         gamut: controls.$gamutClipCheckbox.checked,
         autoSort: controls.$autoSortCheckbox.checked,
         markers: showMarkers,
@@ -1311,11 +1310,6 @@ controls.$posSlider.addEventListener("input", () => {
   refreshView();
 });
 
-controls.$outlineCheckbox.addEventListener("change", () => {
-  viz.setOutlineWidth(controls.$outlineCheckbox.checked ? 2 : 0);
-  scheduleHashUpdate();
-});
-
 controls.$gamutClipCheckbox.addEventListener("change", () => {
   viz.setGamutClip(controls.$gamutClipCheckbox.checked);
   scheduleHashUpdate();
@@ -1361,14 +1355,12 @@ function applyHashState(state: HashState): void {
   controls.$colorModel.value = state.colorModel;
   controls.$distanceMetric.value = state.distanceMetric;
   controls.$posSlider.value = String(state.pos);
-  controls.$outlineCheckbox.checked = state.outline;
   controls.$gamutClipCheckbox.checked = state.gamut;
   controls.$autoSortCheckbox.checked = state.autoSort;
 
   viz.setColorModel(state.colorModel);
   viz.setDistanceMetric(state.distanceMetric);
   viz.setPosition(state.pos);
-  viz.setOutlineWidth(state.outline ? 2 : 0);
   viz.setGamutClip(state.gamut);
 
   palette = state.colors.slice(0, MAX_COLORS);
