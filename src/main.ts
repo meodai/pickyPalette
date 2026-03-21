@@ -98,10 +98,13 @@ import {
   POLAR_MODELS,
 } from "./color";
 import { createControls } from "./controls";
-import { createVizManager, type MarkerInfo } from "./viz";
+import { createVizManager } from "./viz";
 import { createSortManager } from "./sort";
 import { createBeamManager } from "./beam";
 import { encodeHash, decodeHash } from "./hash";
+import { createInteractionGeometry } from "./interaction-geometry";
+import { createPaletteActions } from "./palette-actions";
+import { createProbeManager, type ProbeRenderData } from "./probe";
 import { scheduleFaviconUpdate as _schedFavicon } from "./favicon";
 import type { HashState } from "./types";
 
@@ -168,12 +171,6 @@ let showMarkers = false;
 let invertZ = false;
 let hoveredMarkerIndex = -1;
 let markerHoverTimer: ReturnType<typeof setTimeout> | null = null;
-let canvasRect = $canvasWrap.getBoundingClientRect();
-
-function refreshCanvasRect(): DOMRect {
-  canvasRect = $canvasWrap.getBoundingClientRect();
-  return canvasRect;
-}
 
 function clearMarkerHover(): void {
   if (markerHoverTimer !== null) {
@@ -184,21 +181,6 @@ function clearMarkerHover(): void {
     hoveredMarkerIndex = -1;
     refreshMarkers();
   }
-}
-
-function hitTestMarker(clientX: number, clientY: number): MarkerInfo | null {
-  if (!showMarkers) return null;
-  const cx = clientX - canvasRect.left;
-  const cy = clientY - canvasRect.top;
-  const hitPad = 4; // extra pixels for easier targeting
-  for (const m of viz.getMarkers()) {
-    const dx = cx - m.cssX;
-    const dy = cy - m.cssY;
-    if (dx * dx + dy * dy <= (m.radius + hitPad) * (m.radius + hitPad)) {
-      return m;
-    }
-  }
-  return null;
 }
 const modifierKeys = { meta: false, ctrl: false, alt: false, shift: false };
 let hoveredSwatch: { hex: string; index: number } | null = null;
@@ -229,6 +211,31 @@ function vizPalette(): RGB[] {
 
 const controls = createControls($tools, $sliderWrap);
 const viz = createVizManager($canvasWrap);
+const geometry = createInteractionGeometry({
+  canvasWrap: $canvasWrap,
+  getShowMarkers: () => showMarkers,
+  getMarkers: () => viz.getMarkers(),
+});
+const paletteActions = createPaletteActions({
+  maxColors: MAX_COLORS,
+  getPalette: () => palette,
+  setPalette: (nextPalette) => {
+    palette = nextPalette;
+  },
+  getSelectedIndex: () => selectedIndex,
+  setSelectedIndex: (index) => {
+    selectedIndex = index;
+  },
+  getSortedPalette: () => sortedPalette,
+  setSortedPalette: (nextSortedPalette) => {
+    sortedPalette = nextSortedPalette;
+  },
+  refresh,
+  requestAutoSort,
+  showHighlight,
+  hideHighlight,
+});
+const probe = createProbeManager({ onHide: hideHighlight });
 
 function flipSwatches(updateFn: () => void): void {
   const oldRects = new Map<string, DOMRect>();
@@ -329,7 +336,7 @@ function updateSwatchHover(): void {
 
 function stateDidChange(): void {
   updateCanvasCursor();
-  updateProbe();
+  probe.requestRender(renderProbe);
   updateSwatchHover();
 }
 
@@ -412,23 +419,8 @@ function scheduleHashUpdate(): void {
 
 // ── Undo stack ───────────────────────────────────────────────────────────────
 
-const undoStack: { palette: string[]; selectedIndex: number }[] = [];
-const MAX_UNDO = 50;
-
-function pushUndo(): void {
-  undoStack.push({ palette: [...palette], selectedIndex });
-  if (undoStack.length > MAX_UNDO) undoStack.shift();
-}
-
-function undo(): void {
-  const state = undoStack.pop();
-  if (!state) return;
-  palette = state.palette;
-  selectedIndex = state.selectedIndex;
-  sortedPalette = null;
-  refresh();
-  requestAutoSort();
-}
+const { pushUndo, undo, addColor, removeColor, setColorAt, setPalette } =
+  paletteActions;
 
 // ── Preview color (Cmd/Ctrl hover) ──────────────────────────────────────────
 
@@ -484,56 +476,6 @@ function cancelPreview(): void {
   syncView();
 }
 
-// ── Palette mutations ────────────────────────────────────────────────────────
-
-function addColor(hex: string): void {
-  if (palette.length >= MAX_COLORS) return;
-  if (palette.includes(hex)) return;
-  pushUndo();
-  palette.push(hex);
-  if (sortedPalette) sortedPalette = [...sortedPalette, hex];
-  selectedIndex = palette.length - 1;
-  refresh();
-  showHighlight(hex);
-  requestAutoSort();
-}
-
-let _removeSortTimer: ReturnType<typeof setTimeout> | null = null;
-
-function removeColor(index: number): void {
-  pushUndo();
-  hideHighlight();
-  if (sortedPalette) {
-    const hex = palette[index];
-    const sortedIdx = sortedPalette.indexOf(hex);
-    if (sortedIdx >= 0) sortedPalette.splice(sortedIdx, 1);
-  }
-  palette.splice(index, 1);
-  if (selectedIndex >= palette.length) selectedIndex = palette.length - 1;
-  if (palette.length === 0) selectedIndex = -1;
-  refresh();
-  if (_removeSortTimer !== null) {
-    clearTimeout(_removeSortTimer);
-    _removeSortTimer = null;
-  }
-  if (palette.length < 3) {
-    sortedPalette = null;
-    return;
-  }
-  _removeSortTimer = setTimeout(() => {
-    _removeSortTimer = null;
-    requestAutoSort();
-  }, 1000);
-}
-
-function setColorAt(index: number, hex: string): void {
-  if (palette[index] === hex) return;
-  palette[index] = hex;
-  sortedPalette = null;
-  refresh();
-  requestAutoSort();
-}
-
 function selectColor(index: number): void {
   selectedIndex = index;
   $swatches.querySelectorAll(".picker__swatch").forEach((el) => {
@@ -544,15 +486,6 @@ function selectColor(index: number): void {
   });
   syncView();
   stateDidChange();
-}
-
-function setPalette(colors: string[]): void {
-  pushUndo();
-  palette = colors.slice(0, MAX_COLORS);
-  selectedIndex = palette.length > 0 ? 0 : -1;
-  sortedPalette = null;
-  refresh();
-  requestAutoSort();
 }
 
 // ── Render swatch grid ───────────────────────────────────────────────────────
@@ -700,9 +633,7 @@ function getUV(e: { clientX: number; clientY: number }): {
   v: number;
   inBounds: boolean;
 } {
-  const u = (e.clientX - canvasRect.left) / canvasRect.width;
-  const v = 1 - (e.clientY - canvasRect.top) / canvasRect.height;
-  return { u, v, inBounds: u >= 0 && u <= 1 && v >= 0 && v <= 1 };
+  return geometry.getUV(e);
 }
 
 function getRawHexAtUV(u: number, v: number): string {
@@ -801,6 +732,7 @@ function updateAltMask(): void {
       scheduleAltMask(previewIndex);
       return;
     }
+    const probeEvent = probe.getEvent();
     if (probeEvent) {
       const idx = paletteIndexAtCursor(probeEvent);
       if (
@@ -854,7 +786,7 @@ const DBLCLICK_DIST = 10;
 
 $canvasWrap.addEventListener("pointerdown", (e) => {
   if (e.button !== 0) return;
-  refreshCanvasRect();
+  geometry.refreshRect();
 
   // Track double-click timing early so marker taps don't break it
   const now = performance.now();
@@ -868,7 +800,7 @@ $canvasWrap.addEventListener("pointerdown", (e) => {
   // Tap on a marker (touch): jump slider to that color's slice
   const touchMarker =
     e.pointerType === "touch" && showMarkers && !pickMode
-      ? hitTestMarker(e.clientX, e.clientY)
+      ? geometry.hitTestMarker(e.clientX, e.clientY)
       : null;
 
   // Click on a hovered marker (mouse) or tapped marker (touch)
@@ -994,7 +926,7 @@ function updateCanvasCursor(): void {
 }
 
 $canvasWrap.addEventListener("pointermove", (e) => {
-  refreshCanvasRect();
+  geometry.refreshRect();
   // Update preview color while Cmd/Ctrl hovering
   if (!pointerState && (e.metaKey || e.ctrlKey) && e.pointerType !== "touch") {
     const { u, v, inBounds } = getUV(e);
@@ -1006,11 +938,9 @@ $canvasWrap.addEventListener("pointermove", (e) => {
   }
 
   if (e.pointerType === "touch") {
-    probeEvent = null;
-    hideProbe();
+    probe.clear();
   } else {
-    probeEvent = e;
-    if (probeRAF === null) probeRAF = requestAnimationFrame(updateProbe);
+    probe.setEvent(e, renderProbe);
   }
   syncModifiers(e);
   updateCanvasCursor();
@@ -1018,7 +948,7 @@ $canvasWrap.addEventListener("pointermove", (e) => {
 
   // Marker hover detection (disabled in pick mode — markers are display-only)
   if (!pointerState && !pickMode && showMarkers && e.pointerType !== "touch") {
-    const hit = hitTestMarker(e.clientX, e.clientY);
+    const hit = geometry.hitTestMarker(e.clientX, e.clientY);
     const hitIdx = hit ? hit.paletteIndex : -1;
     if (hitIdx !== hoveredMarkerIndex) {
       if (markerHoverTimer !== null) {
@@ -1145,7 +1075,7 @@ $canvasWrap.addEventListener("pointermove", (e) => {
 
 $canvasWrap.addEventListener("pointerup", (e) => {
   clearLongPress();
-  refreshCanvasRect();
+  geometry.refreshRect();
   if (!pointerState || pointerState.id !== e.pointerId) return;
   const wasDragging = pointerState.dragging;
   const dragIndex = pointerState.dragIndex;
@@ -1202,8 +1132,7 @@ $canvasWrap.addEventListener("pointercancel", () => {
 });
 
 $canvasWrap.addEventListener("pointerleave", () => {
-  probeEvent = null;
-  hideProbe();
+  probe.clear();
   cancelPreview();
   clearMarkerHover();
 });
@@ -1234,39 +1163,18 @@ $canvasWrap.addEventListener(
 
 // ── Cursor probe ─────────────────────────────────────────────────────────────
 
-const $probe = document.createElement("div");
-$probe.className = "cursor-probe";
-$probe.innerHTML =
-  '<span class="cursor-probe__dot"></span><span class="cursor-probe__label"></span><span class="cursor-probe__hint"></span>';
-const $probeDot = $probe.querySelector<HTMLElement>(".cursor-probe__dot")!;
-const $probeLabel = $probe.querySelector<HTMLElement>(".cursor-probe__label")!;
-const $probeHint = $probe.querySelector<HTMLElement>(".cursor-probe__hint")!;
-document.body.appendChild($probe);
-
-let probeRAF: number | null = null;
-let probeEvent: PointerEvent | null = null;
-
-function hideProbe(): void {
-  $probe.classList.remove("is-visible");
-  hideHighlight();
-}
-
-function updateProbe(): void {
-  probeRAF = null;
-  if (!probeEvent) return;
-  const { u, v, inBounds } = getUV(probeEvent);
+function renderProbe(event: PointerEvent): ProbeRenderData | null {
+  const { u, v, inBounds } = getUV(event);
   if (!inBounds) {
-    hideProbe();
-    return;
+    hideHighlight();
+    return null;
   }
 
   const showRaw = pickMode || (pointerState?.dragging ?? false);
   const closestColor = !showRaw ? viz.getClosestColorAtUV(u, v) : null;
   const color = closestColor ?? viz.getRawColorAtUV(u, v);
   const hex = rgbToHex(color);
-  $probeDot.style.background = hex;
-  $probeLabel.textContent = hex;
-  $probeHint.textContent =
+  const hint =
     palette.length === 0
       ? "Click to add"
       : palette.length === 1
@@ -1274,9 +1182,6 @@ function updateProbe(): void {
         : palette.length === 2
           ? "Drag to change"
           : "";
-  $probe.style.left = `${probeEvent.clientX + 14}px`;
-  $probe.style.top = `${probeEvent.clientY + 14}px`;
-  $probe.classList.add("is-visible");
 
   const isAdding = modifierKeys.meta || modifierKeys.ctrl || pickMode;
   if (!showRaw && !isAdding && !modifierKeys.alt && closestColor) {
@@ -1289,6 +1194,13 @@ function updateProbe(): void {
   } else {
     hideHighlight();
   }
+
+  return {
+    hex,
+    hint,
+    x: event.clientX + 14,
+    y: event.clientY + 14,
+  };
 }
 
 // ── Keyboard shortcuts ───────────────────────────────────────────────────────
@@ -1311,10 +1223,11 @@ document.addEventListener("keydown", (e) => {
   // Start preview if Cmd/Ctrl pressed while cursor is already on canvas
   if (
     (e.key === "Meta" || e.key === "Control") &&
-    probeEvent &&
+    probe.getEvent() &&
     !pointerState &&
     previewIndex < 0
   ) {
+    const probeEvent = probe.getEvent()!;
     const { u, v, inBounds } = getUV(probeEvent);
     if (inBounds) showPreview(getRawHexAtUV(u, v));
   }
@@ -1359,6 +1272,7 @@ document.addEventListener("keydown", (e) => {
       removeColor(hoveredSwatch.index);
       return;
     }
+    const probeEvent = probe.getEvent();
     if (probeEvent) {
       const idx = paletteIndexAtCursor(probeEvent);
       if (idx >= 0) {
@@ -1458,7 +1372,11 @@ function syncOverlayStateAfterResize(): void {
   refreshMarkers();
   stateDidChange();
 
-  if (pointerState?.dragging && pointerState.dragIndex >= 0 && !pointerState.moving) {
+  if (
+    pointerState?.dragging &&
+    pointerState.dragIndex >= 0 &&
+    !pointerState.moving
+  ) {
     if (modifierKeys.alt) {
       scheduleAltMask(pointerState.dragIndex);
     } else {
@@ -1470,13 +1388,14 @@ function syncOverlayStateAfterResize(): void {
   if (!hoveredSwatch && modifierKeys.alt) {
     updateAltMask();
   }
+  probe.requestRender(renderProbe);
 }
 
 const resizeObserver = new ResizeObserver((entries) => {
   for (const entry of entries) {
     const w = Math.round(entry.contentRect.width);
     if (w > 0) {
-      refreshCanvasRect();
+      geometry.refreshRect();
       viz.resize(w);
       syncView();
       syncOverlayStateAfterResize();
@@ -1485,7 +1404,10 @@ const resizeObserver = new ResizeObserver((entries) => {
 });
 resizeObserver.observe($canvasWrap);
 
-window.addEventListener("scroll", refreshCanvasRect, { capture: true, passive: true });
+window.addEventListener("scroll", () => geometry.refreshRect(), {
+  capture: true,
+  passive: true,
+});
 
 // ── Apply hash state ─────────────────────────────────────────────────────────
 
