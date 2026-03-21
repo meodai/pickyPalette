@@ -67,6 +67,12 @@ npx tsc --noEmit # type check (strict mode)
 - [token-beam](https://tokenbeam.dev) — Real-time design token sync protocol
 - [Vite](https://vitejs.dev) — Build tooling
 
+## Roadmap
+
+- [ ] Wide-gamut color support — use `getColorAtUV_float()` (palette-shader 0.18.0) for unclamped linear RGB, enabling out-of-sRGB colors
+- [ ] Better swatch management — list view, auto-sort and sort options in the swatch panel
+- [ ] Color position markers — overlay canvas showing dots where palette colors sit, with contrast-aware color (black/white)
+
 ## License
 
 [PolyForm Noncommercial 1.0.0](LICENSE) — free for non-commercial use. For commercial licensing, contact [money@elastiq.ch](mailto:money@elastiq.ch).
