@@ -308,8 +308,10 @@ export function createVizManager($canvasWrap: HTMLElement): VizManager {
   ): void {
     const w = vizRaw.canvas.width;
     const h = vizRaw.canvas.height;
-    markersCanvas.width = w;
-    markersCanvas.height = h;
+    if (markersCanvas.width !== w || markersCanvas.height !== h) {
+      markersCanvas.width = w;
+      markersCanvas.height = h;
+    }
     markersCtx.clearRect(0, 0, w, h);
     currentMarkers = [];
 

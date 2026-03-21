@@ -295,16 +295,30 @@ function syncView(): void {
   viz.updateView(pickMode, palette.length > 0);
 }
 
+let highlightedHex: string | null = null;
+
+function showHighlight(hex: string): void {
+  if (highlightedHex === hex) return;
+  viz.highlightRegion(hex);
+  highlightedHex = hex;
+}
+
+function hideHighlight(): void {
+  if (highlightedHex === null) return;
+  viz.hideHighlight();
+  highlightedHex = null;
+}
+
 function updateSwatchHover(): void {
   if (!hoveredSwatch || pointerState?.dragging || !viz.vizClosest) return;
-  const { hex, index } = hoveredSwatch;
+  const { hex } = hoveredSwatch;
   if (modifierKeys.alt && modifierKeys.shift) {
     viz.compositeMask(hex, "closest", "raw");
   } else if (modifierKeys.alt) {
     viz.compositeMask(hex, "raw", "closest");
   } else {
     viz.hideMask();
-    viz.highlightRegion(hex);
+    showHighlight(hex);
   }
 }
 
@@ -337,6 +351,7 @@ function toggleMarkers(force?: boolean): void {
 }
 
 function refreshView(): void {
+  highlightedHex = null;
   syncView();
   refreshMarkers();
   scheduleHashUpdate();
@@ -345,6 +360,7 @@ function refreshView(): void {
 }
 
 function refresh(): void {
+  highlightedHex = null;
   viz.syncPalette(vizPalette());
   renderSwatches();
   syncPasteField();
@@ -437,7 +453,7 @@ function commitPreview(): void {
   // treat as a real add — push undo, refresh
   pushUndo();
   refresh();
-  viz.highlightRegion(hex);
+  showHighlight(hex);
   requestAutoSort();
 }
 
@@ -473,7 +489,7 @@ function addColor(hex: string): void {
   if (sortedPalette) sortedPalette = [...sortedPalette, hex];
   selectedIndex = palette.length - 1;
   refresh();
-  viz.highlightRegion(hex);
+  showHighlight(hex);
   requestAutoSort();
 }
 
@@ -481,7 +497,7 @@ let _removeSortTimer: ReturnType<typeof setTimeout> | null = null;
 
 function removeColor(index: number): void {
   pushUndo();
-  viz.hideHighlight();
+  hideHighlight();
   if (sortedPalette) {
     const hex = palette[index];
     const sortedIdx = sortedPalette.indexOf(hex);
@@ -588,7 +604,7 @@ function renderSwatches(): void {
     $s.addEventListener("mouseleave", () => {
       hoveredSwatch = null;
       viz.hideMask();
-      viz.hideHighlight();
+      hideHighlight();
     });
     $swatches.insertBefore($s, $addBtn);
   });
@@ -1225,7 +1241,7 @@ let probeEvent: PointerEvent | null = null;
 
 function hideProbe(): void {
   $probe.classList.remove("is-visible");
-  viz.hideHighlight();
+  hideHighlight();
 }
 
 function updateProbe(): void {
@@ -1259,12 +1275,12 @@ function updateProbe(): void {
   if (!showRaw && !isAdding && !modifierKeys.alt && closestColor) {
     const idx = findPaletteIndex(closestColor);
     if (idx >= 0) {
-      viz.highlightRegion(palette[idx]);
+      showHighlight(palette[idx]);
     } else {
-      viz.hideHighlight();
+      hideHighlight();
     }
   } else {
-    viz.hideHighlight();
+    hideHighlight();
   }
 }
 
