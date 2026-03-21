@@ -1256,7 +1256,7 @@ function updateProbe(): void {
   $probe.classList.add("is-visible");
 
   const isAdding = modifierKeys.meta || modifierKeys.ctrl || pickMode;
-  if (!showRaw && !isAdding && closestColor) {
+  if (!showRaw && !isAdding && !modifierKeys.alt && closestColor) {
     const idx = findPaletteIndex(closestColor);
     if (idx >= 0) {
       viz.highlightRegion(palette[idx]);
