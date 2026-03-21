@@ -427,7 +427,7 @@ function showPreview(hex: string): void {
     renderSwatches();
     syncView();
   }
-  if (modifierKeys.alt) updateAltMask();
+  if (modifierKeys.alt) scheduleAltMask(previewIndex);
 }
 
 function commitPreview(): void {
@@ -445,6 +445,7 @@ function cancelPreview(): void {
   if (previewIndex < 0) return;
   const idx = previewIndex;
   previewIndex = -1;
+  cancelScheduledAltMask();
   if (sortedPalette) {
     const hex = palette[idx];
     const si = sortedPalette.indexOf(hex);
@@ -456,6 +457,7 @@ function cancelPreview(): void {
   viz.hideMask();
   altMaskActive = false;
   altMaskIndex = -1;
+  altMaskShift = false;
   viz.syncPalette(vizPalette());
   renderSwatches();
   syncView();
@@ -661,6 +663,8 @@ let pointerState: {
   origHex: string;
 } | null = null;
 let dragMaskRAF: number | null = null;
+let altMaskRAF: number | null = null;
+let pendingAltMaskIndex: number | null = null;
 let longPressTimer: ReturnType<typeof setTimeout> | null = null;
 
 function clearLongPress(): void {
@@ -713,6 +717,7 @@ function cancelDrag(): void {
   const idx = pointerState.dragIndex;
   const wasMoving = pointerState.moving;
   pointerState = null;
+  cancelScheduledAltMask();
   if (dragMaskRAF !== null) {
     cancelAnimationFrame(dragMaskRAF);
     dragMaskRAF = null;
@@ -731,6 +736,36 @@ function buildMask(colorIndex: number): void {
   viz.compositeMask(palette[colorIndex], "raw", "closest");
 }
 
+function cancelScheduledAltMask(): void {
+  if (altMaskRAF !== null) {
+    cancelAnimationFrame(altMaskRAF);
+    altMaskRAF = null;
+  }
+  pendingAltMaskIndex = null;
+}
+
+function scheduleAltMask(colorIndex: number): void {
+  if (colorIndex < 0 || colorIndex >= palette.length) return;
+  pendingAltMaskIndex = colorIndex;
+  if (altMaskRAF !== null) return;
+  altMaskRAF = requestAnimationFrame(() => {
+    altMaskRAF = null;
+    const idx = pendingAltMaskIndex;
+    pendingAltMaskIndex = null;
+    if (idx === null || idx < 0 || idx >= palette.length || !modifierKeys.alt) {
+      return;
+    }
+    if (modifierKeys.shift) {
+      viz.compositeMask(palette[idx], "closest", "raw");
+    } else {
+      buildMask(idx);
+    }
+    altMaskIndex = idx;
+    altMaskShift = modifierKeys.shift;
+    altMaskActive = true;
+  });
+}
+
 let altMaskActive = false;
 let altMaskIndex = -1;
 let altMaskShift = false;
@@ -738,20 +773,12 @@ let altMaskShift = false;
 function updateAltMask(): void {
   if (modifierKeys.alt) {
     if (pointerState?.dragging && pointerState.dragIndex >= 0) {
-      buildMask(pointerState.dragIndex);
-      altMaskIndex = pointerState.dragIndex;
-      altMaskActive = true;
+      scheduleAltMask(pointerState.dragIndex);
       return;
     }
     // Preview color always gets a fresh mask rebuild since it moves
     if (previewIndex >= 0) {
-      if (modifierKeys.shift) {
-        viz.compositeMask(palette[previewIndex], "closest", "raw");
-      } else {
-        buildMask(previewIndex);
-      }
-      altMaskIndex = previewIndex;
-      altMaskActive = true;
+      scheduleAltMask(previewIndex);
       return;
     }
     if (probeEvent) {
@@ -774,11 +801,14 @@ function updateAltMask(): void {
       }
     }
   }
-  if (!modifierKeys.alt && altMaskActive) {
-    viz.hideMask();
-    altMaskActive = false;
-    altMaskIndex = -1;
-    altMaskShift = false;
+  if (!modifierKeys.alt) {
+    cancelScheduledAltMask();
+    if (altMaskActive) {
+      viz.hideMask();
+      altMaskActive = false;
+      altMaskIndex = -1;
+      altMaskShift = false;
+    }
   }
 }
 
@@ -924,7 +954,11 @@ $canvasWrap.addEventListener("pointerdown", (e) => {
       pointerState.dragging = true;
       pointerState.dragIndex = palette.length - 1;
       pointerState.moving = false;
-      buildMask(pointerState.dragIndex);
+      if (modifierKeys.alt) {
+        scheduleAltMask(pointerState.dragIndex);
+      } else {
+        buildMask(pointerState.dragIndex);
+      }
       stateDidChange();
     }, LONG_PRESS_MS);
   }
@@ -998,7 +1032,11 @@ $canvasWrap.addEventListener("pointermove", (e) => {
       if (inBounds) {
         addColor(getRawHexAtUV(u, v));
         pointerState.dragIndex = palette.length - 1;
-        buildMask(pointerState.dragIndex);
+        if (modifierKeys.alt) {
+          scheduleAltMask(pointerState.dragIndex);
+        } else {
+          buildMask(pointerState.dragIndex);
+        }
       }
     }
   }
@@ -1070,7 +1108,9 @@ $canvasWrap.addEventListener("pointermove", (e) => {
       }
       liveUpdateColor(pointerState.dragIndex, hex);
       refreshMarkers();
-      if (!pointerState.moving && dragMaskRAF === null) {
+      if (modifierKeys.alt) {
+        scheduleAltMask(pointerState.dragIndex);
+      } else if (!pointerState.moving && dragMaskRAF === null) {
         const idx = pointerState.dragIndex;
         dragMaskRAF = requestAnimationFrame(() => {
           dragMaskRAF = null;
@@ -1088,6 +1128,7 @@ $canvasWrap.addEventListener("pointerup", (e) => {
   const dragIndex = pointerState.dragIndex;
   const wasMoving = pointerState.moving;
   pointerState = null;
+  cancelScheduledAltMask();
   if (dragMaskRAF !== null) {
     cancelAnimationFrame(dragMaskRAF);
     dragMaskRAF = null;
@@ -1129,6 +1170,7 @@ $canvasWrap.addEventListener("pointercancel", () => {
   clearLongPress();
   pointerState = null;
   stateDidChange();
+  cancelScheduledAltMask();
   if (dragMaskRAF !== null) {
     cancelAnimationFrame(dragMaskRAF);
     dragMaskRAF = null;
