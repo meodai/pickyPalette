@@ -9,6 +9,7 @@ export interface Controls {
   $gamutClipCheckbox: HTMLInputElement;
   $autoSortCheckbox: HTMLInputElement;
   $markersCheckbox: HTMLInputElement;
+  $snapAxisCheckbox: HTMLInputElement;
   $posSlider: HTMLInputElement;
   $sliderCell: HTMLDivElement;
 
@@ -161,6 +162,8 @@ export function createControls(
   $markersLabel.appendChild($markersCheckbox);
   appendSetting($markersLabel);
 
+  const $snapAxisCheckbox = checkbox("Ease to Current Slice on Drag", true);
+
   // ── Position slider ────────────────────────────────────────────────
   const $posSlider = document.createElement("input");
   $posSlider.type = "range";
@@ -225,6 +228,7 @@ export function createControls(
     $gamutClipCheckbox,
     $autoSortCheckbox,
     $markersCheckbox,
+    $snapAxisCheckbox,
     $posSlider,
     $sliderCell: $sliderCell as HTMLDivElement,
 

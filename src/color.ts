@@ -59,7 +59,7 @@ export const AXIS_NAMES: Record<string, [string, string, string]> = {
   spectrum: ["\u03BB", "L", "C"],
 };
 
-const SLIDER_CULORI_MODE: Record<string, string> = {
+export const SLIDER_CULORI_MODE: Record<string, string> = {
   okhsl: "okhsl",
   okhslPolar: "okhsl",
   okhsv: "okhsv",
@@ -214,6 +214,49 @@ export function getSliderValue(
   const isPolar = POLAR_MODELS.has(colorModel);
   if (axis === "z" || (isPolar && axis === "y")) norm = 1 - norm;
   return norm;
+}
+
+/**
+ * Set a color's slider-axis component to a value in slider space (0–1).
+ * Handles the z-axis / polar y-axis inversion automatically.
+ */
+export function setSliderAxis(
+  hex: string,
+  colorModel: string,
+  axis: Axis,
+  sliderVal: number,
+): string {
+  const culoriMode = SLIDER_CULORI_MODE[colorModel];
+  if (!culoriMode) return hex;
+  const comps = SLIDER_COMPONENTS[culoriMode];
+  const ranges = SLIDER_RANGES[culoriMode];
+  if (!comps || !ranges) return hex;
+
+  const axisIdx = AXES.indexOf(axis);
+  const sliderComp = comps[axisIdx];
+  const range = ranges[sliderComp];
+  if (!range) return hex;
+
+  const convert = converter(culoriMode as any);
+  const color = convert(hex) as Record<string, any> | undefined;
+  if (!color) return hex;
+
+  // Un-invert from slider space to raw normalized space
+  const isPolar = POLAR_MODELS.has(colorModel);
+  let rawNorm = sliderVal;
+  if (axis === "z" || (isPolar && axis === "y")) rawNorm = 1 - rawNorm;
+
+  const [min, max] = range;
+  color[sliderComp] = min + rawNorm * (max - min);
+
+  const rgb = toSRGB(color as unknown as Color);
+  if (!rgb) return hex;
+  const r = rgb.r ?? 0, g = rgb.g ?? 0, b = rgb.b ?? 0;
+  return rgbToHex([
+    Math.max(0, Math.min(1, isNaN(r) ? 0 : r)),
+    Math.max(0, Math.min(1, isNaN(g) ? 0 : g)),
+    Math.max(0, Math.min(1, isNaN(b) ? 0 : b)),
+  ]);
 }
 
 export function isHueAxis(colorModel: string, axis: Axis): boolean {

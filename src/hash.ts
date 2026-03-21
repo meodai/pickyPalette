@@ -10,6 +10,7 @@ export interface HashInput {
   gamut: boolean;
   autoSort: boolean;
   markers: boolean;
+  snapAxis: boolean;
 }
 
 export function encodeHash(s: HashInput): string {
@@ -26,6 +27,7 @@ export function encodeHash(s: HashInput): string {
     ...(s.gamut && { gamut: "1" }),
     ...(!s.autoSort && { sort: "0" }),
     ...(s.markers && { markers: "1" }),
+    ...(!s.snapAxis && { snap: "0" }),
   });
   return colorStr ? `#colors/${colorStr}?${params}` : `#?${params}`;
 }
@@ -66,5 +68,6 @@ export function decodeHash(hash: string): HashState | null {
     gamut: params.get("gamut") === "1",
     autoSort: params.get("sort") !== "0",
     markers: params.get("markers") === "1",
+    snapAxis: params.get("snap") !== "0",
   };
 }

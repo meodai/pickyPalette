@@ -12,4 +12,5 @@ export interface HashState {
   gamut: boolean;
   autoSort: boolean;
   markers: boolean;
+  snapAxis: boolean;
 }

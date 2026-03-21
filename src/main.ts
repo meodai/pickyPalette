@@ -82,6 +82,7 @@
  *   to vizRaw, rendered via OffscreenCanvas with a "P" overlay.
  */
 
+import { interpolate, formatHex } from "culori";
 import type { RGB, Axis } from "./types";
 import { AXES } from "./types";
 import {
@@ -91,6 +92,8 @@ import {
   AXIS_NAMES,
   isHueAxis,
   getSliderValue,
+  setSliderAxis,
+  SLIDER_CULORI_MODE,
 } from "./color";
 import { createControls } from "./controls";
 import { createVizManager, type MarkerInfo } from "./viz";
@@ -99,6 +102,13 @@ import { createBeamManager } from "./beam";
 import { encodeHash, decodeHash } from "./hash";
 import { scheduleFaviconUpdate as _schedFavicon } from "./favicon";
 import type { HashState } from "./types";
+
+function dragInterpolate(from: string, to: string, t: number, colorModel: string): string | null {
+  const mode = SLIDER_CULORI_MODE[colorModel] ?? "oklab";
+  const fn = interpolate([from, to], mode as any);
+  const c = fn(t);
+  return c ? formatHex(c) : null;
+}
 
 // ── DOM refs ─────────────────────────────────────────────────────────────────
 
@@ -355,6 +365,7 @@ function scheduleHashUpdate(): void {
         gamut: controls.$gamutClipCheckbox.checked,
         autoSort: controls.$autoSortCheckbox.checked,
         markers: showMarkers,
+        snapAxis: controls.$snapAxisCheckbox.checked,
       }),
     );
   }, 400);
@@ -626,6 +637,10 @@ let pointerState: {
   dragging: boolean;
   dragIndex: number;
   moving: boolean;
+  /** Original 3rd-axis normalized value (0–1) of the color being moved */
+  origSliderVal: number;
+  /** Original hex of the color being moved */
+  origHex: string;
 } | null = null;
 let dragMaskRAF: number | null = null;
 let longPressTimer: ReturnType<typeof setTimeout> | null = null;
@@ -813,6 +828,8 @@ $canvasWrap.addEventListener("pointerdown", (e) => {
       dragging: false,
       dragIndex: idx,
       moving: true,
+      origSliderVal: parseFloat(controls.$posSlider.value),
+      origHex: palette[idx],
     };
     $canvasWrap.setPointerCapture(e.pointerId);
     return;
@@ -829,6 +846,8 @@ $canvasWrap.addEventListener("pointerdown", (e) => {
       dragging: false,
       dragIndex: palette.length - 1,
       moving: true,
+      origSliderVal: parseFloat(controls.$posSlider.value),
+      origHex: palette[palette.length - 1],
     };
     $canvasWrap.setPointerCapture(e.pointerId);
     return;
@@ -849,14 +868,25 @@ $canvasWrap.addEventListener("pointerdown", (e) => {
   }
 
   const isMoving = !adding && selectedIndex >= 0;
+  const dragIdx = isDblClick ? palette.length - 1 : adding ? -1 : selectedIndex;
+
+  // For move-drags, record the color's actual 3rd-axis position
+  const curSliderPos = parseFloat(controls.$posSlider.value);
+  let origSV = curSliderPos;
+  if (isMoving && dragIdx >= 0) {
+    const sv = getSliderValue(palette[dragIdx], controls.$colorModel.value, controls.axis);
+    if (sv !== null) origSV = sv;
+  }
 
   pointerState = {
     x: e.clientX,
     y: e.clientY,
     id: e.pointerId,
     dragging: isDblClick,
-    dragIndex: isDblClick ? palette.length - 1 : adding ? -1 : selectedIndex,
+    dragIndex: dragIdx,
     moving: isDblClick || isMoving,
+    origSliderVal: origSV,
+    origHex: dragIdx >= 0 ? palette[dragIdx] : "",
   };
   $canvasWrap.setPointerCapture(e.pointerId);
 
@@ -958,7 +988,19 @@ $canvasWrap.addEventListener("pointermove", (e) => {
   if (pointerState.dragging && pointerState.dragIndex >= 0) {
     const { u, v, inBounds } = getUV(e);
     if (inBounds || pointerState.moving) {
-      liveUpdateColor(pointerState.dragIndex, getRawHexAtUV(u, v));
+      const sliceHex = getRawHexAtUV(u, v);
+      let hex: string;
+      if (pointerState.moving && controls.$snapAxisCheckbox.checked) {
+        const dist = Math.hypot(e.clientX - pointerState.x, e.clientY - pointerState.y);
+        const canvasSize = $canvasWrap.getBoundingClientRect().width;
+        const radius = canvasSize * 0.25;
+        const t = Math.min(1, dist / radius);
+        const blended = dragInterpolate(pointerState.origHex, sliceHex, t, controls.$colorModel.value);
+        hex = blended ?? sliceHex;
+      } else {
+        hex = sliceHex;
+      }
+      liveUpdateColor(pointerState.dragIndex, hex);
       refreshMarkers();
       if (!pointerState.moving && dragMaskRAF === null) {
         const idx = pointerState.dragIndex;
@@ -1251,6 +1293,10 @@ controls.$markersCheckbox.addEventListener("change", () => {
   toggleMarkers(controls.$markersCheckbox.checked);
 });
 
+controls.$snapAxisCheckbox.addEventListener("change", () => {
+  scheduleHashUpdate();
+});
+
 // ── Resize ───────────────────────────────────────────────────────────────────
 
 const resizeObserver = new ResizeObserver((entries) => {
@@ -1288,6 +1334,7 @@ function applyHashState(state: HashState): void {
   controls.setAxis(state.axis);
   controls.updateLabels();
   toggleMarkers(state.markers);
+  controls.$snapAxisCheckbox.checked = state.snapAxis;
   renderSwatches();
   syncView();
   requestAutoSort();
