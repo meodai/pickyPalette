@@ -25,6 +25,7 @@ export function createProbeManager(
   const { onHide } = options;
   const probe = document.createElement("div");
   probe.className = "cursor-probe";
+  probe.dataset.testid = "cursor-probe";
   probe.innerHTML =
     '<span class="cursor-probe__dot"></span><span class="cursor-probe__label"></span><span class="cursor-probe__hint"></span>';
   const probeDot = probe.querySelector<HTMLElement>(".cursor-probe__dot")!;

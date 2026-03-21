@@ -91,6 +91,7 @@ export function createVizManager($canvasWrap: HTMLElement): VizManager {
   // Mask overlay
   const maskCanvas = document.createElement("canvas");
   maskCanvas.className = "mask-canvas";
+  maskCanvas.dataset.testid = "mask-canvas";
   maskCanvas.style.display = "none";
   const maskCtx = maskCanvas.getContext("2d")!;
   $canvasWrap.appendChild(maskCanvas);
@@ -98,6 +99,7 @@ export function createVizManager($canvasWrap: HTMLElement): VizManager {
   // Highlight overlay for swatch hover
   const highlightCanvas = document.createElement("canvas");
   highlightCanvas.className = "highlight-canvas";
+  highlightCanvas.dataset.testid = "highlight-canvas";
   highlightCanvas.style.display = "none";
   const highlightCtx = highlightCanvas.getContext("2d")!;
   $canvasWrap.appendChild(highlightCanvas);
@@ -105,6 +107,7 @@ export function createVizManager($canvasWrap: HTMLElement): VizManager {
   // Markers overlay for color position dots
   const markersCanvas = document.createElement("canvas");
   markersCanvas.className = "markers-canvas";
+  markersCanvas.dataset.testid = "markers-canvas";
   markersCanvas.style.display = "none";
   const markersCtx = markersCanvas.getContext("2d")!;
   $canvasWrap.appendChild(markersCanvas);

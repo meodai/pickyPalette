@@ -9,9 +9,12 @@
     "preview": "vite preview",
     "test": "vitest",
     "test:run": "vitest run",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
     "format": "prettier --write \"**/*.{ts,js,css,html,json}\" --ignore-path .gitignore"
   },
   "devDependencies": {
+    "@playwright/test": "^1.58.2",
     "@types/culori": "^4.0.1",
     "jsdom": "^27.0.1",
     "prettier": "^3.8.1",
