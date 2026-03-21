@@ -21,6 +21,7 @@ The canvas maps a color space onto a plane — as you add colors, it splits into
 | <kbd>Alt</kbd> / <kbd>Option</kbd>                    | Reveal raw color space under hovered region       |
 | <kbd>Shift</kbd> + <kbd>Alt</kbd> / <kbd>Option</kbd> | Isolate color (flat region stays, rest shows raw) |
 | Scroll                                                | Adjust position slider (3rd axis)                 |
+| Long tap (touch)                                      | Add a new color (hold to drag-adjust)             |
 
 - Dragging moves the color relative to its position (no snapping to cursor).
 - An empty canvas treats any click/drag as adding a color.

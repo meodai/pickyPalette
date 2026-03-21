@@ -11,6 +11,7 @@
  * Double-click       → add a new color (hold to drag-adjust)
  * Empty canvas       → click/drag always adds
  * Scroll             → adjust the position slider (3rd axis)
+ * Long tap (touch)   → add a new color (hold to drag-adjust)
  *
  * Modifiers (canvas & swatches)
  * -----------------------------
