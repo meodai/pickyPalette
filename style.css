@@ -143,11 +143,35 @@ kbd {
   color: var(--c-surface);
 }
 
-.picker__manual p {
+.picker__manual-body {
   font-size: 0.8em;
-  padding: 0.4rem 1.4rem 0.6rem 1.4rem;
+  padding: 1rem 1.4rem 1.4rem 1.4rem;
   color: var(--c-surface-on);
   border-top: var(--s-line) solid var(--c-border);
+}
+
+.picker__manual-body p {
+  margin: 0;
+}
+
+.picker__manual-body p + p {
+  margin-top: 0.4rem;
+}
+
+.picker__manual-body dl {
+  margin: 0;
+}
+
+.picker__manual-body dt {
+  margin-top: 0.5rem;
+}
+
+.picker__manual-body dt:first-child {
+  margin-top: 0;
+}
+
+.picker__manual-body dd {
+  margin: 0.15rem 0 0 1.4rem;
 }
 
 .picker__keys {
