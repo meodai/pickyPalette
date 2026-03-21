@@ -524,6 +524,8 @@ input[type="range"]::-moz-range-thumb {
   border-bottom: var(--s-line) solid var(--c-surface-on);
   cursor: grab;
   touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 .picker__canvas-wrap.is-grabbing {
