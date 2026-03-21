@@ -63,7 +63,7 @@ export function createVizManager($canvasWrap: HTMLElement): VizManager {
   const pixelRatio = Math.min(devicePixelRatio, 2);
   let currentAxis: Axis = "y";
   let currentPosition = 0.5;
-  let currentColorModel = "okhsl";
+  let currentColorModel = "okhslPolar";
   let currentDistanceMetric = "oklab";
   let currentOutlineWidth = 0;
   let currentGamutClip = false;

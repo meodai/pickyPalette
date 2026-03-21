@@ -62,7 +62,7 @@ export function decodeHash(hash: string): HashState | null {
   const axis = params.get("axis") || "y";
   return {
     colors,
-    colorModel: params.get("model") || "okhsl",
+    colorModel: params.get("model") || "okhslPolar",
     distanceMetric: params.get("metric") || "oklab",
     axis: (axis === "x" || axis === "y" || axis === "z" ? axis : "y") as Axis,
     pos: parseFloat(params.get("pos") ?? "0.5"),
