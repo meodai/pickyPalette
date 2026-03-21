@@ -329,8 +329,6 @@ function undo(): void {
   requestAutoSort();
 }
 
-let hasInteracted = false;
-
 // ── Palette mutations ────────────────────────────────────────────────────────
 
 function addColor(hex: string): void {
@@ -348,7 +346,6 @@ function addColor(hex: string): void {
 let _removeSortTimer: ReturnType<typeof setTimeout> | null = null;
 
 function removeColor(index: number): void {
-  hasInteracted = true;
   pushUndo();
   viz.hideHighlight();
   if (sortedPalette) {
@@ -730,7 +727,6 @@ $canvasWrap.addEventListener("pointermove", (e) => {
 
   if (!pointerState.dragging && Math.hypot(dx, dy) > DRAG_THRESHOLD) {
     clearLongPress();
-    hasInteracted = true;
     pointerState.dragging = true;
     stateDidChange();
 
@@ -880,7 +876,7 @@ function updateProbe(): void {
       ? "Click to add"
       : palette.length === 1
         ? "Double click to add"
-        : palette.length === 2 || !hasInteracted
+        : palette.length === 2
           ? "Drag to change"
           : "";
   $probe.style.left = `${probeEvent.clientX + 14}px`;
