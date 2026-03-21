@@ -150,4 +150,48 @@ describe("palette actions", () => {
     expect(harness.refresh).toHaveBeenCalledTimes(1);
     expect(harness.requestAutoSort).toHaveBeenCalledTimes(1);
   });
+
+  it("setColorAt updates the color and clears sorted palette", () => {
+    const harness = createHarness({
+      palette: ["#111111", "#222222", "#333333"],
+      selectedIndex: 0,
+      sortedPalette: ["#111111", "#222222", "#333333"],
+    });
+
+    harness.actions.setColorAt(1, "#aaaaaa");
+
+    expect(harness.palette).toEqual(["#111111", "#aaaaaa", "#333333"]);
+    expect(harness.sortedPalette).toBeNull();
+    expect(harness.refresh).toHaveBeenCalledTimes(1);
+    expect(harness.requestAutoSort).toHaveBeenCalledTimes(1);
+  });
+
+  it("setColorAt skips update when color is unchanged", () => {
+    const harness = createHarness({
+      palette: ["#111111", "#222222"],
+      selectedIndex: 0,
+    });
+
+    harness.actions.setColorAt(0, "#111111");
+
+    expect(harness.refresh).not.toHaveBeenCalled();
+  });
+
+  it("pushUndo captures current state for later undo", () => {
+    const harness = createHarness({
+      palette: ["#111111"],
+      selectedIndex: 0,
+    });
+
+    harness.actions.pushUndo();
+    // Mutate state directly via setPalette
+    harness.actions.setPalette(["#aaaaaa", "#bbbbbb"]);
+    harness.refresh.mockClear();
+    harness.requestAutoSort.mockClear();
+
+    harness.actions.undo();
+
+    expect(harness.palette).toEqual(["#111111"]);
+    expect(harness.selectedIndex).toBe(0);
+  });
 });

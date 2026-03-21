@@ -110,6 +110,22 @@ describe("interaction geometry", () => {
     expect(geometry.hitTestMarker(70, 50)).toBeNull();
   });
 
+  it("inverts v so that v=1 is at the top and v=0 at the bottom", () => {
+    const geometry = createInteractionGeometry({
+      canvasWrap,
+      getShowMarkers: () => showMarkers,
+      getMarkers: () => markers,
+    });
+
+    // Top of canvas (clientY = 20, which is rect.top)
+    const top = geometry.getUV({ clientX: 110, clientY: 20 });
+    expect(top.v).toBeCloseTo(1, 5);
+
+    // Bottom of canvas (clientY = 120, which is rect.bottom)
+    const bottom = geometry.getUV({ clientX: 110, clientY: 120 });
+    expect(bottom.v).toBeCloseTo(0, 5);
+  });
+
   it("returns null when markers are hidden", () => {
     markers = [
       {

@@ -1,12 +1,14 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  computeSliderStops,
   getColorUV,
   getSliderValue,
   hexToRGB,
   isHueAxis,
   rgbToHex,
   setSliderAxis,
+  toVizPalette,
 } from "./color";
 
 describe("color helpers", () => {
@@ -40,5 +42,49 @@ describe("color helpers", () => {
 
   it("returns the original hex for unsupported models", () => {
     expect(setSliderAxis("#123456", "not-a-model", "x", 0.5)).toBe("#123456");
+  });
+
+  it("round-trips black and white", () => {
+    expect(rgbToHex(hexToRGB("#000000"))).toBe("#000000");
+    expect(rgbToHex(hexToRGB("#ffffff"))).toBe("#ffffff");
+  });
+
+  it("handles 3-character hex shorthand", () => {
+    const rgb = hexToRGB("#f0a");
+    expect(rgbToHex(rgb)).toBe("#ff00aa");
+  });
+
+  it("converts a palette to viz RGB arrays", () => {
+    const result = toVizPalette(["#ff0000", "#00ff00"]);
+    expect(result).toHaveLength(2);
+    expect(result[0][0]).toBeCloseTo(1, 2);
+    expect(result[0][1]).toBeCloseTo(0, 2);
+    expect(result[1][1]).toBeCloseTo(1, 2);
+  });
+
+  it("computeSliderStops returns 13 stops for valid model/axis", () => {
+    const stops = computeSliderStops("rgb", "x");
+    expect(stops).toHaveLength(13);
+    stops.forEach((s) => expect(s).toMatch(/^#[0-9a-f]{6}$/));
+  });
+
+  it("computeSliderStops reverses for z-axis", () => {
+    const stopsX = computeSliderStops("rgb", "x");
+    const stopsZ = computeSliderStops("rgb", "z");
+    expect(stopsZ).toEqual([...stopsZ].reverse().map((_, i) => stopsZ[i]));
+    // z-axis should be reversed relative to the raw order
+    // first stop of x (R varies) starts dark, first stop of z (B varies) starts bright
+    expect(stopsX[0]).not.toBe(stopsX[12]);
+    expect(stopsZ[0]).not.toBe(stopsZ[12]);
+  });
+
+  it("computeSliderStops returns empty for unknown model", () => {
+    expect(computeSliderStops("fake-model", "x")).toEqual([]);
+  });
+
+  it("computeSliderStops reverses y-axis for polar models", () => {
+    const stops = computeSliderStops("okhslPolar", "y");
+    expect(stops).toHaveLength(13);
+    // polar y should be reversed — first stop should correspond to high saturation
   });
 });
