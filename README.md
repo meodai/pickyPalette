@@ -23,6 +23,7 @@ A color picker where you sculpt a palette directly on a color model. Colors clai
 | <kbd>Cmd</kbd> + <kbd>Alt</kbd> + <kbd>Shift</kbd>    | Preview color with isolation mask                 |
 | <kbd>Delete</kbd> / <kbd>Backspace</kbd>              | Remove hovered swatch, cursor color, or selected  |
 | <kbd>Cmd</kbd> / <kbd>Ctrl</kbd> + <kbd>Z</kbd>       | Undo                                              |
+| <kbd>Cmd</kbd> / <kbd>Ctrl</kbd> + <kbd>I</kbd>       | Invert slider axis                                |
 | <kbd>Esc</kbd>                                        | Cancel drag or exit pick mode                     |
 
 - Dragging moves the color relative to its position (no snapping to cursor).
@@ -51,6 +52,8 @@ A color picker where you sculpt a palette directly on a color model. Colors clai
 | Clip to sRGB                     | Hides out-of-gamut colors (only affects wide-gamut models)            |
 | Auto-Sort Color Swatches         | ML-trained sorting of swatches by visual similarity                   |
 | Show Color Markers (P)           | Dots showing where each color sits on the canvas, sized by proximity  |
+| Ease to Current Slice on Drag    | Gradually blends a dragged color's 3rd axis toward the current slice  |
+| Invert Slider Axis (Cmd+I)       | Flips the slider axis direction (e.g. white↔black center in HSL)     |
 
 ## Development
 

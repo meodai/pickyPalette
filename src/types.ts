@@ -13,4 +13,5 @@ export interface HashState {
   autoSort: boolean;
   markers: boolean;
   snapAxis: boolean;
+  invertZ: boolean;
 }

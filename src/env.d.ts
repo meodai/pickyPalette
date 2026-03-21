@@ -39,6 +39,7 @@ declare module "palette-shader" {
     distanceMetric: string;
     outlineWidth: number;
     gamutClip: boolean;
+    invertAxes: string[];
     palette: [number, number, number][];
     showRaw: boolean;
     getColorAtUV(u: number, v: number): [number, number, number];

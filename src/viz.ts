@@ -49,6 +49,7 @@ export interface VizManager {
   setDistanceMetric(metric: string): void;
   setOutlineWidth(w: number): void;
   setGamutClip(clip: boolean): void;
+  setInvertZ(invert: boolean): void;
   setColor(rgb: RGB, index: number): void;
 
   getRawColorAtUV(u: number, v: number): RGB;
@@ -66,6 +67,7 @@ export function createVizManager($canvasWrap: HTMLElement): VizManager {
   let currentDistanceMetric = "oklab";
   let currentOutlineWidth = 0;
   let currentGamutClip = false;
+  let currentInvertZ = false;
 
   const vizRaw = new PaletteViz({
     width: 500,
@@ -314,7 +316,7 @@ export function createVizManager($canvasWrap: HTMLElement): VizManager {
     for (let i = 0; i < palette.length; i++) {
       if (i === skipIndex) continue;
       const hex = palette[i];
-      const pos = getColorUV(hex, currentColorModel, currentAxis, currentPosition);
+      const pos = getColorUV(hex, currentColorModel, currentAxis, currentPosition, currentInvertZ);
       if (!pos) continue;
 
       const proximity = 1 - Math.min(1, pos.sliderDist * 2);
@@ -425,6 +427,12 @@ export function createVizManager($canvasWrap: HTMLElement): VizManager {
       currentGamutClip = clip;
       vizRaw.gamutClip = clip;
       if (vizClosest) vizClosest.gamutClip = clip;
+    },
+    setInvertZ(invert: boolean) {
+      currentInvertZ = invert;
+      const axes = invert ? ["z"] : [];
+      vizRaw.invertAxes = axes;
+      if (vizClosest) vizClosest.invertAxes = axes;
     },
     setColor(rgb: RGB, index: number) {
       vizRaw.setColor(rgb, index);

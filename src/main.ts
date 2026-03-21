@@ -31,6 +31,7 @@
  * ---------------
  * Delete / Backspace  → remove hovered swatch, color under cursor, or selected
  * Cmd/Ctrl + Z        → undo
+ * Cmd/Ctrl + I        → invert slider axis
  * Escape              → cancel drag or exit pick mode
  *
  * Cursors
@@ -158,6 +159,7 @@ let selectedIndex = -1;
 let sortedPalette: string[] | null = null;
 let pickMode = false;
 let showMarkers = false;
+let invertZ = false;
 let hoveredMarkerIndex = -1;
 let markerHoverTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -310,6 +312,15 @@ function refreshMarkers(): void {
   if (showMarkers || pickMode) viz.drawMarkers(palette, hoveredMarkerIndex, previewIndex);
 }
 
+function toggleInvertZ(force?: boolean): void {
+  invertZ = force ?? !invertZ;
+  controls.$invertZBtn.classList.toggle("is-active", invertZ);
+  controls.$sliderInvertBtn.classList.toggle("is-active", invertZ);
+  viz.setInvertZ(invertZ);
+  refreshMarkers();
+  scheduleHashUpdate();
+}
+
 function toggleMarkers(force?: boolean): void {
   showMarkers = force ?? !showMarkers;
   controls.$markersCheckbox.checked = showMarkers;
@@ -366,6 +377,7 @@ function scheduleHashUpdate(): void {
         autoSort: controls.$autoSortCheckbox.checked,
         markers: showMarkers,
         snapAxis: controls.$snapAxisCheckbox.checked,
+        invertZ,
       }),
     );
   }, 400);
@@ -1192,6 +1204,11 @@ document.addEventListener("keydown", (e) => {
     undo();
     return;
   }
+  if ((e.metaKey || e.ctrlKey) && e.key === "i") {
+    e.preventDefault();
+    toggleInvertZ();
+    return;
+  }
   // Don't intercept browser shortcuts (Cmd/Ctrl + key)
   if (e.metaKey || e.ctrlKey) return;
   if (e.key === "1") { controls.setAxis("x"); }
@@ -1297,6 +1314,8 @@ controls.$snapAxisCheckbox.addEventListener("change", () => {
   scheduleHashUpdate();
 });
 
+controls.$invertZBtn.addEventListener("click", () => toggleInvertZ());
+
 // ── Resize ───────────────────────────────────────────────────────────────────
 
 const resizeObserver = new ResizeObserver((entries) => {
@@ -1335,6 +1354,7 @@ function applyHashState(state: HashState): void {
   controls.updateLabels();
   toggleMarkers(state.markers);
   controls.$snapAxisCheckbox.checked = state.snapAxis;
+  toggleInvertZ(state.invertZ);
   renderSwatches();
   syncView();
   requestAutoSort();

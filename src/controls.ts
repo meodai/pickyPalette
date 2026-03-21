@@ -10,6 +10,8 @@ export interface Controls {
   $autoSortCheckbox: HTMLInputElement;
   $markersCheckbox: HTMLInputElement;
   $snapAxisCheckbox: HTMLInputElement;
+  $invertZBtn: HTMLButtonElement;
+  $sliderInvertBtn: HTMLButtonElement;
   $posSlider: HTMLInputElement;
   $sliderCell: HTMLDivElement;
 
@@ -102,10 +104,26 @@ export function createControls(
   $modelSpan.textContent = "Color model";
   const $modelControls = document.createElement("span");
   $modelControls.className = "picker__model-controls";
+  const $invertZBtn = document.createElement("button");
+  $invertZBtn.type = "button";
+  $invertZBtn.className = "picker__invert-btn";
+  $invertZBtn.textContent = "\u25D1";
+  $invertZBtn.title = "Invert Slider Axis";
+
+  const $invertGroup = document.createElement("span");
+  $invertGroup.className = "picker__invert-group";
+  $invertGroup.appendChild($invertZBtn);
+
   $modelControls.appendChild($colorModel);
   $modelControls.appendChild($axisGroup);
+
+  const $modelRight = document.createElement("span");
+  $modelRight.className = "picker__model-right";
+  $modelRight.appendChild($modelControls);
+  $modelRight.appendChild($invertGroup);
+
   $modelRow.appendChild($modelSpan);
-  $modelRow.appendChild($modelControls);
+  $modelRow.appendChild($modelRight);
 
   // Inner wrapper for grid height animation
   const $inner = document.createElement("div");
@@ -188,8 +206,17 @@ export function createControls(
   const $sliderCell = document.createElement("div");
   $sliderCell.className = "picker__slider-cell";
   $sliderCell.appendChild($posSlider);
+
+  const $sliderInvertBtn = document.createElement("button");
+  $sliderInvertBtn.type = "button";
+  $sliderInvertBtn.className = "picker__slider-invert-btn";
+  $sliderInvertBtn.textContent = "\u25D1";
+  $sliderInvertBtn.title = "Invert Slider Axis";
+  $sliderInvertBtn.addEventListener("click", () => $invertZBtn.click());
+
   $sliderWrap.appendChild($sliderAxisWrap);
   $sliderWrap.appendChild($sliderCell);
+  $sliderWrap.appendChild($sliderInvertBtn);
 
   // ── Internal update helpers ────────────────────────────────────────
   function updateAxisButtonLabels(): void {
@@ -229,6 +256,8 @@ export function createControls(
     $autoSortCheckbox,
     $markersCheckbox,
     $snapAxisCheckbox,
+    $invertZBtn,
+    $sliderInvertBtn,
     $posSlider,
     $sliderCell: $sliderCell as HTMLDivElement,
 

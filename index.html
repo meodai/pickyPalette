@@ -131,6 +131,10 @@
           <td>Undo</td>
         </tr>
         <tr>
+          <td><kbd>Cmd</kbd> / <kbd>Ctrl</kbd> + <kbd>I</kbd></td>
+          <td>Invert slider axis</td>
+        </tr>
+        <tr>
           <td><kbd>Esc</kbd></td>
           <td>Cancel drag or exit pick mode</td>
         </tr>
@@ -240,6 +244,23 @@
           the color is to the current slider position — closer colors appear
           larger. Hover a dot for 500ms to highlight it, then click to jump the
           slider to that color's slice.
+        </p>
+      </details>
+      <details class="picker__manual">
+        <summary>Ease to Current Slice</summary>
+        <p>
+          When enabled, dragging a color gradually blends its 3rd axis value
+          toward the current slider position. The further you drag, the more it
+          eases in. When off, the color immediately snaps to the current slice.
+        </p>
+      </details>
+      <details class="picker__manual">
+        <summary>Invert Slider Axis</summary>
+        <p>
+          Flips the slider axis direction with <kbd>Cmd</kbd> /
+          <kbd>Ctrl</kbd> + <kbd>I</kbd> or via the settings checkbox. Useful
+          for color models like HSL where you might prefer white in the center
+          instead of black.
         </p>
       </details>
       <details class="picker__manual">

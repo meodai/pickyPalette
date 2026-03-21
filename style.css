@@ -333,6 +333,13 @@ input[type="checkbox"]:checked::after {
   flex: 0 0 auto;
 }
 
+.picker__model-right {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  gap: 0.2rem;
+}
+
 .picker__model-controls {
   display: flex;
   flex: 1;
@@ -344,6 +351,35 @@ input[type="checkbox"]:checked::after {
   flex: 1;
   min-width: 0;
   border: none;
+}
+
+.picker__invert-group {
+  display: flex;
+  flex: 0 0 auto;
+  margin-left: 0.35rem;
+  border: var(--s-line) solid var(--c-surface-on);
+}
+
+.picker__invert-btn {
+  border: none;
+  background: var(--c-surface);
+  color: var(--c-surface-on);
+  cursor: pointer;
+  font-size: inherit;
+  font-family: inherit;
+  font-weight: inherit;
+  padding: 0.2rem 0.45rem;
+  transition: background 0.05s linear, color 0.05s linear;
+}
+
+.picker__invert-btn:hover {
+  background: var(--c-surface-on);
+  color: var(--c-surface);
+}
+
+.picker__invert-btn.is-active {
+  background: var(--c-surface-on);
+  color: var(--c-surface);
 }
 
 .axis-buttons {
@@ -630,6 +666,30 @@ input[type="range"]::-moz-range-thumb {
   border-left: var(--s-line) solid var(--c-border);
 }
 
+.picker__slider-invert-btn {
+  flex: 0 0 auto;
+  border: none;
+  border-left: var(--s-line) solid var(--c-surface-on);
+  background: var(--c-surface);
+  color: var(--c-surface-on);
+  cursor: pointer;
+  font-size: inherit;
+  font-family: inherit;
+  font-weight: inherit;
+  padding: 0 0.45rem;
+  transition: background 0.05s linear, color 0.05s linear;
+}
+
+.picker__slider-invert-btn:hover {
+  background: var(--c-surface-on);
+  color: var(--c-surface);
+}
+
+.picker__slider-invert-btn.is-active {
+  background: var(--c-surface-on);
+  color: var(--c-surface);
+}
+
 .picker__slider-cell {
   flex: 1;
   min-width: 0;
@@ -697,7 +757,7 @@ input[type="range"]::-moz-range-thumb {
 
 /* Compact mode: when swatches exist */
 .picker__add.is-compact {
-  width: 1.8rem;
+  width: 2rem;
   height: 1.8rem;
   padding: 0;
   border: var(--s-line) solid var(--c-border);

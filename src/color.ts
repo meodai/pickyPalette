@@ -293,6 +293,7 @@ export function getColorUV(
   colorModel: string,
   axis: Axis,
   sliderPos: number,
+  invertZ = false,
 ): { u: number; v: number; sliderDist: number } | null {
   const culoriMode = SLIDER_CULORI_MODE[colorModel];
   if (!culoriMode) return null;
@@ -310,6 +311,9 @@ export function getColorUV(
     const [min, max] = ranges[c];
     return (val - min) / (max - min);
   });
+
+  // Shader INVERT_Z flips the z-component
+  if (invertZ) norm[2] = 1 - norm[2];
 
   const axisIdx = AXES.indexOf(axis);
   const isPolar = POLAR_MODELS.has(colorModel);
