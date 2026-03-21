@@ -252,7 +252,9 @@ export function setSliderAxis(
 
   const rgb = toSRGB(color as unknown as Color);
   if (!rgb) return hex;
-  const r = rgb.r ?? 0, g = rgb.g ?? 0, b = rgb.b ?? 0;
+  const r = rgb.r ?? 0,
+    g = rgb.g ?? 0,
+    b = rgb.b ?? 0;
   return rgbToHex([
     Math.max(0, Math.min(1, isNaN(r) ? 0 : r)),
     Math.max(0, Math.min(1, isNaN(g) ? 0 : g)),

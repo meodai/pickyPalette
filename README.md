@@ -44,16 +44,16 @@ A color picker where you sculpt a palette directly on a color model. Colors clai
 
 ## Settings
 
-| Setting                          | Description                                                           |
-| -------------------------------- | --------------------------------------------------------------------- |
-| Color model                      | Color space used to render the canvas (OKHsl, OKLab, HSL, etc.)       |
-| Distance metric                  | How "closeness" between colors is measured (OKLab, ΔE2000, RGB, etc.) |
-| Outline                          | Draws borders between palette regions                                 |
-| Clip to sRGB                     | Hides out-of-gamut colors (only affects wide-gamut models)            |
-| Auto-Sort Color Swatches         | ML-trained sorting of swatches by visual similarity                   |
-| Show Color Markers (P)           | Dots showing where each color sits on the canvas, sized by proximity  |
-| Ease to Current Slice on Drag    | Gradually blends a dragged color's 3rd axis toward the current slice  |
-| Invert Slider Axis (Cmd+I)       | Flips the slider axis direction (e.g. white↔black center in HSL)     |
+| Setting                       | Description                                                           |
+| ----------------------------- | --------------------------------------------------------------------- |
+| Color model                   | Color space used to render the canvas (OKHsl, OKLab, HSL, etc.)       |
+| Distance metric               | How "closeness" between colors is measured (OKLab, ΔE2000, RGB, etc.) |
+| Outline                       | Draws borders between palette regions                                 |
+| Clip to sRGB                  | Hides out-of-gamut colors (only affects wide-gamut models)            |
+| Auto-Sort Color Swatches      | ML-trained sorting of swatches by visual similarity                   |
+| Show Color Markers (P)        | Dots showing where each color sits on the canvas, sized by proximity  |
+| Ease to Current Slice on Drag | Gradually blends a dragged color's 3rd axis toward the current slice  |
+| Invert Slider Axis (Cmd+I)    | Flips the slider axis direction (e.g. white↔black center in HSL)      |
 
 ## Development
 

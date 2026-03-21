@@ -369,7 +369,9 @@ input[type="checkbox"]:checked::after {
   font-family: inherit;
   font-weight: inherit;
   padding: 0.2rem 0.45rem;
-  transition: background 0.05s linear, color 0.05s linear;
+  transition:
+    background 0.05s linear,
+    color 0.05s linear;
 }
 
 .picker__invert-btn:hover {
@@ -566,7 +568,9 @@ input[type="range"]::-moz-range-thumb {
     radial-gradient(circle, var(--c-surface-on) 0.75px, transparent 0.75px),
     radial-gradient(circle, var(--c-surface-on) 0.75px, transparent 0.75px);
   background-size: 10px 10px;
-  background-position: 0 0, 5px 5px;
+  background-position:
+    0 0,
+    5px 5px;
 }
 
 .picker__canvas-wrap.is-grabbing {
@@ -677,7 +681,9 @@ input[type="range"]::-moz-range-thumb {
   font-family: inherit;
   font-weight: inherit;
   padding: 0 0.45rem;
-  transition: background 0.05s linear, color 0.05s linear;
+  transition:
+    background 0.05s linear,
+    color 0.05s linear;
 }
 
 .picker__slider-invert-btn:hover {

@@ -104,7 +104,12 @@ import { encodeHash, decodeHash } from "./hash";
 import { scheduleFaviconUpdate as _schedFavicon } from "./favicon";
 import type { HashState } from "./types";
 
-function dragInterpolate(from: string, to: string, t: number, colorModel: string): string | null {
+function dragInterpolate(
+  from: string,
+  to: string,
+  t: number,
+  colorModel: string,
+): string | null {
   const mode = SLIDER_CULORI_MODE[colorModel] ?? "oklab";
   const fn = interpolate([from, to], mode as any);
   const c = fn(t);
@@ -309,7 +314,8 @@ function stateDidChange(): void {
 }
 
 function refreshMarkers(): void {
-  if (showMarkers || pickMode) viz.drawMarkers(palette, hoveredMarkerIndex, previewIndex);
+  if (showMarkers || pickMode)
+    viz.drawMarkers(palette, hoveredMarkerIndex, previewIndex);
 }
 
 function toggleInvertZ(force?: boolean): void {
@@ -886,7 +892,11 @@ $canvasWrap.addEventListener("pointerdown", (e) => {
   const curSliderPos = parseFloat(controls.$posSlider.value);
   let origSV = curSliderPos;
   if (isMoving && dragIdx >= 0) {
-    const sv = getSliderValue(palette[dragIdx], controls.$colorModel.value, controls.axis);
+    const sv = getSliderValue(
+      palette[dragIdx],
+      controls.$colorModel.value,
+      controls.axis,
+    );
     if (sv !== null) origSV = sv;
   }
 
@@ -930,11 +940,7 @@ function updateCanvasCursor(): void {
 
 $canvasWrap.addEventListener("pointermove", (e) => {
   // Update preview color while Cmd/Ctrl hovering
-  if (
-    !pointerState &&
-    (e.metaKey || e.ctrlKey) &&
-    e.pointerType !== "touch"
-  ) {
+  if (!pointerState && (e.metaKey || e.ctrlKey) && e.pointerType !== "touch") {
     const { u, v, inBounds } = getUV(e);
     if (inBounds) {
       showPreview(getRawHexAtUV(u, v));
@@ -1005,11 +1011,19 @@ $canvasWrap.addEventListener("pointermove", (e) => {
       const sliceHex = getRawHexAtUV(cu, cv);
       let hex: string;
       if (pointerState.moving && controls.$snapAxisCheckbox.checked) {
-        const dist = Math.hypot(e.clientX - pointerState.x, e.clientY - pointerState.y);
+        const dist = Math.hypot(
+          e.clientX - pointerState.x,
+          e.clientY - pointerState.y,
+        );
         const canvasSize = $canvasWrap.getBoundingClientRect().width;
         const radius = canvasSize * 0.25;
         const t = Math.min(1, dist / radius);
-        const blended = dragInterpolate(pointerState.origHex, sliceHex, t, controls.$colorModel.value);
+        const blended = dragInterpolate(
+          pointerState.origHex,
+          sliceHex,
+          t,
+          controls.$colorModel.value,
+        );
         hex = blended ?? sliceHex;
       } else {
         hex = sliceHex;
@@ -1112,7 +1126,6 @@ $canvasWrap.addEventListener(
   },
   { passive: false },
 );
-
 
 // ── Cursor probe ─────────────────────────────────────────────────────────────
 
@@ -1218,9 +1231,15 @@ document.addEventListener("keydown", (e) => {
   }
   // Don't intercept browser shortcuts (Cmd/Ctrl + key)
   if (e.metaKey || e.ctrlKey) return;
-  if (e.key === "1") { controls.setAxis("x"); }
-  if (e.key === "2") { controls.setAxis("y"); }
-  if (e.key === "3") { controls.setAxis("z"); }
+  if (e.key === "1") {
+    controls.setAxis("x");
+  }
+  if (e.key === "2") {
+    controls.setAxis("y");
+  }
+  if (e.key === "3") {
+    controls.setAxis("z");
+  }
   if (e.key === "c" || e.key === "C") {
     e.preventDefault();
     setPickMode(!pickMode);
