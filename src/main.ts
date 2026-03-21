@@ -168,6 +168,12 @@ let showMarkers = false;
 let invertZ = false;
 let hoveredMarkerIndex = -1;
 let markerHoverTimer: ReturnType<typeof setTimeout> | null = null;
+let canvasRect = $canvasWrap.getBoundingClientRect();
+
+function refreshCanvasRect(): DOMRect {
+  canvasRect = $canvasWrap.getBoundingClientRect();
+  return canvasRect;
+}
 
 function clearMarkerHover(): void {
   if (markerHoverTimer !== null) {
@@ -182,9 +188,8 @@ function clearMarkerHover(): void {
 
 function hitTestMarker(clientX: number, clientY: number): MarkerInfo | null {
   if (!showMarkers) return null;
-  const rect = $canvasWrap.getBoundingClientRect();
-  const cx = clientX - rect.left;
-  const cy = clientY - rect.top;
+  const cx = clientX - canvasRect.left;
+  const cy = clientY - canvasRect.top;
   const hitPad = 4; // extra pixels for easier targeting
   for (const m of viz.getMarkers()) {
     const dx = cx - m.cssX;
@@ -695,9 +700,8 @@ function getUV(e: { clientX: number; clientY: number }): {
   v: number;
   inBounds: boolean;
 } {
-  const rect = $canvasWrap.getBoundingClientRect();
-  const u = (e.clientX - rect.left) / rect.width;
-  const v = 1 - (e.clientY - rect.top) / rect.height;
+  const u = (e.clientX - canvasRect.left) / canvasRect.width;
+  const v = 1 - (e.clientY - canvasRect.top) / canvasRect.height;
   return { u, v, inBounds: u >= 0 && u <= 1 && v >= 0 && v <= 1 };
 }
 
@@ -850,6 +854,7 @@ const DBLCLICK_DIST = 10;
 
 $canvasWrap.addEventListener("pointerdown", (e) => {
   if (e.button !== 0) return;
+  refreshCanvasRect();
 
   // Track double-click timing early so marker taps don't break it
   const now = performance.now();
@@ -989,6 +994,7 @@ function updateCanvasCursor(): void {
 }
 
 $canvasWrap.addEventListener("pointermove", (e) => {
+  refreshCanvasRect();
   // Update preview color while Cmd/Ctrl hovering
   if (!pointerState && (e.metaKey || e.ctrlKey) && e.pointerType !== "touch") {
     const { u, v, inBounds } = getUV(e);
@@ -1139,6 +1145,7 @@ $canvasWrap.addEventListener("pointermove", (e) => {
 
 $canvasWrap.addEventListener("pointerup", (e) => {
   clearLongPress();
+  refreshCanvasRect();
   if (!pointerState || pointerState.id !== e.pointerId) return;
   const wasDragging = pointerState.dragging;
   const dragIndex = pointerState.dragIndex;
@@ -1437,16 +1444,48 @@ controls.$invertZBtn.addEventListener("click", () => toggleInvertZ());
 
 // ── Resize ───────────────────────────────────────────────────────────────────
 
+function syncOverlayStateAfterResize(): void {
+  highlightedHex = null;
+  if (dragMaskRAF !== null) {
+    cancelAnimationFrame(dragMaskRAF);
+    dragMaskRAF = null;
+  }
+  cancelScheduledAltMask();
+  viz.hideMask();
+  altMaskActive = false;
+  altMaskIndex = -1;
+  altMaskShift = false;
+  refreshMarkers();
+  stateDidChange();
+
+  if (pointerState?.dragging && pointerState.dragIndex >= 0 && !pointerState.moving) {
+    if (modifierKeys.alt) {
+      scheduleAltMask(pointerState.dragIndex);
+    } else {
+      buildMask(pointerState.dragIndex);
+    }
+    return;
+  }
+
+  if (!hoveredSwatch && modifierKeys.alt) {
+    updateAltMask();
+  }
+}
+
 const resizeObserver = new ResizeObserver((entries) => {
   for (const entry of entries) {
     const w = Math.round(entry.contentRect.width);
     if (w > 0) {
+      refreshCanvasRect();
       viz.resize(w);
       syncView();
+      syncOverlayStateAfterResize();
     }
   }
 });
 resizeObserver.observe($canvasWrap);
+
+window.addEventListener("scroll", refreshCanvasRect, { capture: true, passive: true });
 
 // ── Apply hash state ─────────────────────────────────────────────────────────
 
