@@ -40,8 +40,8 @@ export function createControls(
   const $colorModel = document.createElement("select");
   $colorModel.innerHTML = `
     <optgroup label="OK — Hue-based">
-      <option value="okhsl">OKHsl</option>
-      <option value="okhslPolar" selected>OKHsl Polar</option>
+      <option value="okhsl" selected>OKHsl</option>
+      <option value="okhslPolar">OKHsl Polar</option>
       <option value="okhsvPolar">OKHsv Polar</option>
       <option value="okhsv">OKHsv</option>
     </optgroup>
