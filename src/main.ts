@@ -1170,10 +1170,17 @@ function renderProbe(event: PointerEvent): ProbeRenderData | null {
     return null;
   }
 
-  const showRaw = pickMode || (pointerState?.dragging ?? false);
+  const isDragging = pointerState?.dragging ?? false;
+  const showRaw = pickMode || isDragging;
+
   const closestColor = !showRaw ? viz.getClosestColorAtUV(u, v) : null;
-  const color = closestColor ?? viz.getRawColorAtUV(u, v);
-  const hex = rgbToHex(color);
+  let hex: string;
+  if (isDragging && pointerState!.dragIndex >= 0) {
+    hex = palette[pointerState!.dragIndex];
+  } else {
+    const color = closestColor ?? viz.getRawColorAtUV(u, v);
+    hex = rgbToHex(color);
+  }
   const hint =
     palette.length === 0
       ? "Click to add"
