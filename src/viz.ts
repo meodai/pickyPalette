@@ -2,6 +2,7 @@ import { PaletteViz } from "palette-shader";
 import { wcagContrast } from "culori";
 import type { RGB, Axis } from "./types";
 import { hexToRGB, getColorUV } from "./color";
+import { DEFAULT_AXIS, DEFAULT_POSITION, DEFAULT_COLOR_MODEL, DEFAULT_DISTANCE_METRIC, DEFAULT_GAMUT, DEFAULT_INVERT_Z } from "./defaults";
 
 const DUMMY_PALETTE: RGB[] = [[0.5, 0.5, 0.5]];
 
@@ -65,13 +66,13 @@ export interface VizManager {
 
 export function createVizManager($canvasWrap: HTMLElement): VizManager {
   const pixelRatio = Math.min(devicePixelRatio, 2);
-  let currentAxis: Axis = "y";
-  let currentPosition = 0.5;
-  let currentColorModel = "okhsl";
-  let currentDistanceMetric = "oklab";
+  let currentAxis: Axis = DEFAULT_AXIS;
+  let currentPosition = DEFAULT_POSITION;
+  let currentColorModel = DEFAULT_COLOR_MODEL;
+  let currentDistanceMetric = DEFAULT_DISTANCE_METRIC;
   let currentOutlineWidth = 0;
-  let currentGamutClip = false;
-  let currentInvertZ = false;
+  let currentGamutClip = DEFAULT_GAMUT;
+  let currentInvertZ = DEFAULT_INVERT_Z;
 
   const vizRaw = new PaletteViz({
     width: 500,

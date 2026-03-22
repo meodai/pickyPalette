@@ -1,6 +1,7 @@
 import type { Axis } from "./types";
 import { AXES } from "./types";
 import { AXIS_NAMES, computeSliderStops } from "./color";
+import { DEFAULT_AXIS, DEFAULT_GAMUT, DEFAULT_AUTO_SORT, DEFAULT_MARKERS, DEFAULT_SNAP_AXIS } from "./defaults";
 
 export interface Controls {
   $colorModel: HTMLSelectElement;
@@ -34,7 +35,7 @@ export function createControls(
   $tools: HTMLElement,
   $sliderWrap: HTMLElement,
 ): Controls {
-  let currentAxis: Axis = "y";
+  let currentAxis: Axis = DEFAULT_AXIS;
 
   // ── Color model dropdown ───────────────────────────────────────────
   const $colorModel = document.createElement("select");
@@ -166,11 +167,11 @@ export function createControls(
     return $cb;
   }
 
-  const $gamutClipCheckbox = checkbox("Clip to sRGB", false);
-  const $autoSortCheckbox = checkbox("Auto-Sort Color Swatches", true);
+  const $gamutClipCheckbox = checkbox("Clip to sRGB", DEFAULT_GAMUT);
+  const $autoSortCheckbox = checkbox("Auto-Sort Color Swatches", DEFAULT_AUTO_SORT);
   const $markersCheckbox = document.createElement("input");
   $markersCheckbox.type = "checkbox";
-  $markersCheckbox.checked = false;
+  $markersCheckbox.checked = DEFAULT_MARKERS;
   const $markersLabel = document.createElement("label");
   const $markersSpan = document.createElement("span");
   $markersSpan.innerHTML = "Show Color Markers <kbd>P</kbd>";
@@ -178,7 +179,7 @@ export function createControls(
   $markersLabel.appendChild($markersCheckbox);
   appendSetting($markersLabel);
 
-  const $snapAxisCheckbox = checkbox("Ease to Current Slice on Drag", true);
+  const $snapAxisCheckbox = checkbox("Ease to Current Slice on Drag", DEFAULT_SNAP_AXIS);
 
   // ── Position slider ────────────────────────────────────────────────
   const $posSlider = document.createElement("input");

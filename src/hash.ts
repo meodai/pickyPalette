@@ -1,4 +1,5 @@
 import type { Axis, HashState } from "./types";
+import { DEFAULT_COLOR_MODEL, DEFAULT_DISTANCE_METRIC, DEFAULT_AXIS, DEFAULT_POSITION } from "./defaults";
 
 export interface HashInput {
   palette: string[];
@@ -60,10 +61,10 @@ export function decodeHash(hash: string): HashState | null {
   const axis = params.get("axis") || "y";
   return {
     colors,
-    colorModel: params.get("model") || "okhsl",
-    distanceMetric: params.get("metric") || "oklab",
-    axis: (axis === "x" || axis === "y" || axis === "z" ? axis : "y") as Axis,
-    pos: parseFloat(params.get("pos") ?? "0.5"),
+    colorModel: params.get("model") || DEFAULT_COLOR_MODEL,
+    distanceMetric: params.get("metric") || DEFAULT_DISTANCE_METRIC,
+    axis: (axis === "x" || axis === "y" || axis === "z" ? axis : DEFAULT_AXIS) as Axis,
+    pos: parseFloat(params.get("pos") ?? String(DEFAULT_POSITION)),
     gamut: params.get("gamut") === "1",
     autoSort: params.get("sort") !== "0",
     markers: params.get("markers") === "1",
