@@ -570,7 +570,6 @@ $paste.addEventListener("input", () => {
 });
 
 function syncPasteField(): void {
-  if (document.activeElement === $paste) return;
   pasteIsSync = true;
   $paste.value = displayPalette().join(", ");
   pasteIsSync = false;
