@@ -1,4 +1,5 @@
 import { PaletteViz } from "palette-shader";
+import type { SupportedColorModels, DistanceMetric } from "palette-shader";
 import { wcagContrast } from "culori";
 import type { RGB, Axis } from "./types";
 import { hexToRGB, getColorUV } from "./color";
@@ -68,8 +69,8 @@ export function createVizManager($canvasWrap: HTMLElement): VizManager {
   const pixelRatio = Math.min(devicePixelRatio, 2);
   let currentAxis: Axis = DEFAULT_AXIS;
   let currentPosition = DEFAULT_POSITION;
-  let currentColorModel = DEFAULT_COLOR_MODEL;
-  let currentDistanceMetric = DEFAULT_DISTANCE_METRIC;
+  let currentColorModel: SupportedColorModels = DEFAULT_COLOR_MODEL as SupportedColorModels;
+  let currentDistanceMetric: DistanceMetric = DEFAULT_DISTANCE_METRIC as DistanceMetric;
   let currentOutlineWidth = 0;
   let currentGamutClip = DEFAULT_GAMUT;
   let currentInvertZ = DEFAULT_INVERT_Z;
@@ -156,8 +157,8 @@ export function createVizManager($canvasWrap: HTMLElement): VizManager {
     if (!vizClosest) return;
 
     // Force synchronous render so we can read fresh pixels
-    vizClosest.getColorAtUV(0.5, 0.5);
-    vizRaw.getColorAtUV(0.5, 0.5);
+    vizClosest.render();
+    vizRaw.render();
 
     const w = vizClosest.canvas.width;
     const h = vizClosest.canvas.height;
@@ -234,7 +235,7 @@ export function createVizManager($canvasWrap: HTMLElement): VizManager {
 
   function highlightRegion(hex: string): void {
     if (!vizClosest) return;
-    vizClosest.getColorAtUV(0.5, 0.5); // force render
+    vizClosest.render(); // force render
 
     const w = vizClosest.canvas.width;
     const h = vizClosest.canvas.height;
@@ -430,14 +431,14 @@ export function createVizManager($canvasWrap: HTMLElement): VizManager {
       if (vizClosest) vizClosest.position = pos;
     },
     setColorModel(model: string) {
-      currentColorModel = model;
-      vizRaw.colorModel = model;
-      if (vizClosest) vizClosest.colorModel = model;
+      currentColorModel = model as SupportedColorModels;
+      vizRaw.colorModel = currentColorModel;
+      if (vizClosest) vizClosest.colorModel = currentColorModel;
     },
     setDistanceMetric(metric: string) {
-      currentDistanceMetric = metric;
-      vizRaw.distanceMetric = metric;
-      if (vizClosest) vizClosest.distanceMetric = metric;
+      currentDistanceMetric = metric as DistanceMetric;
+      vizRaw.distanceMetric = currentDistanceMetric;
+      if (vizClosest) vizClosest.distanceMetric = currentDistanceMetric;
     },
     setOutlineWidth(w: number) {
       currentOutlineWidth = w;
@@ -451,7 +452,7 @@ export function createVizManager($canvasWrap: HTMLElement): VizManager {
     },
     setInvertZ(invert: boolean) {
       currentInvertZ = invert;
-      const axes = invert ? ["z"] : [];
+      const axes: Axis[] = invert ? ["z"] : [];
       vizRaw.invertAxes = axes;
       if (vizClosest) vizClosest.invertAxes = axes;
     },

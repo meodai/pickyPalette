@@ -25,7 +25,7 @@
   "dependencies": {
     "colorsort-js": "^3.1.0",
     "culori": "^4.0.2",
-    "palette-shader": "^0.18.0",
+    "palette-shader": "^0.20.0",
     "token-beam": "^1.9.0"
   }
 }

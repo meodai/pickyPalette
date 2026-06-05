@@ -14,42 +14,6 @@ declare module "colorsort-js/trained.json" {
   export default data;
 }
 
-declare module "palette-shader" {
-  export interface PaletteVizOptions {
-    width: number;
-    height: number;
-    pixelRatio: number;
-    axis: string;
-    position: number;
-    colorModel: string;
-    distanceMetric: string;
-    palette: [number, number, number][];
-    showRaw: boolean;
-    container: HTMLElement;
-    outlineWidth?: number;
-    gamutClip?: boolean;
-    invertAxes?: string[];
-  }
-
-  export class PaletteViz {
-    constructor(options: PaletteVizOptions);
-    canvas: HTMLCanvasElement;
-    axis: string;
-    position: number;
-    colorModel: string;
-    distanceMetric: string;
-    outlineWidth: number;
-    gamutClip: boolean;
-    invertAxes: string[];
-    palette: [number, number, number][];
-    showRaw: boolean;
-    getColorAtUV(u: number, v: number): [number, number, number];
-    setColor(rgb: [number, number, number], index: number): void;
-    resize(width: number, height: number): void;
-    destroy(): void;
-  }
-}
-
 declare module "token-beam" {
   interface SessionEvents {
     paired: (data: { sessionToken?: string }) => void;
