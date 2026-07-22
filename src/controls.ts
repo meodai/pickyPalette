@@ -153,6 +153,8 @@ export function createControls(
     </optgroup>
     <optgroup label="Misc">
       <option value="cam16ucsD65">CAM16-UCS D65</option>
+      <option value="redmean">Redmean</option>
+      <option value="kotsarenkoRamosYIQ">Kotsarenko / Ramos (YIQ)</option>
       <option value="rgb">RGB</option>
     </optgroup>
   `;
